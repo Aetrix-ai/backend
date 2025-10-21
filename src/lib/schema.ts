@@ -44,6 +44,10 @@ export const userLoginSchema = z.object({
   password: z.string().min(6).max(100),
 });
 
+export const aiRouterSchema = z.object({
+  prompt: z.string().min(1).max(5000),
+});
+
 export const projectSchema = z.object({
   
 });
