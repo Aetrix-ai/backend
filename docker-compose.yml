@@ -1,0 +1,12 @@
+
+services:
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: aetrix
+      POSTGRES_PASSWORD: aetrix_password
+      POSTGRES_DB: aetrix_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data

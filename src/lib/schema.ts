@@ -44,7 +44,9 @@ export const userLoginSchema = z.object({
   password: z.string().min(6).max(100),
 });
 
-export const projectSchema = z.object({});
+export const projectSchema = z.object({
+  
+});
 
 export const eventSchema = z.object({});
 
