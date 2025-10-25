@@ -6,6 +6,7 @@ export const AiRouter = Router();
 
 AiRouter.post("/",async (req, res) => {
     // stream the response
+    // redis path need to decide asap
     const payloard  = aiRouterSchema.parse(req.body);
     if (!payloard) {
         logger.warn("Invalid input received in AI Router");

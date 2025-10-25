@@ -3,10 +3,9 @@ import { EnrichPrompt } from "./agents/enrichment-agent";
 import { ValidateUserPrompt } from "./agents/validator-agent";
 import { GenerateCode } from "./agents/generator-agent";
 import { selectTeckStack } from "./agents/techstack-agent";
-import ca from "zod/v4/locales/ca.js";
 import logger from "../../lib/logger";
 
-//TODO add a valid return type
+//TODO: add a valid return type
 export const GeneratedResponse = async (userInput: string, res: Response): Promise<any> => {
   // TODO: response streaming
   try {

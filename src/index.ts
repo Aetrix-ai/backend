@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { Config } from "./config";
+import { Config, validateConfig } from "./config";
 import logger from "./lib/logger";
 import { pinoHttp } from "pino-http";
 
@@ -11,17 +11,19 @@ app.use(
   pinoHttp({ logger }),
 );
 
-const config = Config.getInstance();
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 app.post("/health", (req, res) => {
-  res.status(402).  send("OK");
+  res.status(402).send("OK");
 });
 
-app.listen(config.PORT, () => {
-
-  logger.info(`Server is running on PORT: ${config.PORT}`);
-  logger.error({ message: "This is an error message" } ,"Testing error log");
+app.listen(Config.SERVER.PORT, () => {
+  logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
+  logger.error({ message: "This is an error message" }, "Testing error log");
+  try {
+    validateConfig(Config);
+    logger.info("Configuration validation passed");
+  } catch (error: any) {
+    logger.error({ message: error.message }, "Configuration validation failed");
+    process.exit(1); // Exit the process with failure
+  }
 });
+

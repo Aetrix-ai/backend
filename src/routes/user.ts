@@ -6,9 +6,9 @@ import jwt from "jsonwebtoken";
 
 
 export const UserRouter = Router();
-const config = Config.getInstance();
+
 UserRouter.post("/register", async (req, res) => {
-  // long user onboarding proccess  for now 
+  // long user onboarding proccess  for now
   const payload = userRegisterSchema.safeParse(req.body);
   if (!payload.success) {
     logger.warn(`Invalid user registration payload`, payload.error as any);
@@ -16,7 +16,7 @@ UserRouter.post("/register", async (req, res) => {
   }
   //verify email otp
   try {
-    const id = await config.prismaClient.user.create({
+    const id = await Config.prismaClient.user.create({
       data: {
         name: payload.data.name,
         email: payload.data.email,
@@ -50,7 +50,7 @@ UserRouter.post("/signin", async (req, res) => {
     return res.status(400).send(payload.error);
   }
   try {
-    const user = await config.prismaClient.user.findUnique({
+    const user = await Config.prismaClient.user.findUnique({
       where: { email: payload.data.email },
     });
     if (!user || user.password !== payload.data.password) {
@@ -60,7 +60,7 @@ UserRouter.post("/signin", async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      config.JWT_SECRET,
+      Config.JWT.USER_JWT_SECRET,
       { expiresIn: "7d" }
     );
     logger.info(`User logged in with id: ${user.id} ${payload.data.email}`);
@@ -78,7 +78,7 @@ UserRouter.get("/profile",async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const user = await config.prismaClient.user.findUnique({
+    const user = await Config.prismaClient.user.findUnique({
       where: { id: userID },
     });
     if (!user) {
@@ -112,7 +112,7 @@ UserRouter.put("/profile",async (req, res) => {
     }
   }
   try {
-    await config.prismaClient.user.update({
+    await Config.prismaClient.user.update({
       where: { id: userID },
       data
     });
