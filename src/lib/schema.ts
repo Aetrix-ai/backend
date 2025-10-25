@@ -2,11 +2,11 @@ import { z } from "zod";
 
 /*
 
-  id       Int        
-  email    String     
+  id       Int
+  email    String
   name     String
   password String
-  role     String    
+  role     String
   skills   String[]
   bio      String?
   avatar   String?
@@ -22,7 +22,7 @@ import { z } from "zod";
 
  */
 
-export const userRegisterSchema = z.object({
+export const userSchema = z.object({
   name: z.string().min(3).max(100),
   email: z.string().email(),
   password: z.string().min(6).max(100),
@@ -39,9 +39,22 @@ export const userRegisterSchema = z.object({
   techStack: z.array(z.string()).optional(),
 });
 
-export const userLoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6).max(100),
+/**
+ * model Achievement {
+  id          Int
+  title       String
+  description String
+  date        DateTime
+  userId      Int
+  images     String[] // add any images
+  user        User    @relation(fields: [userId], references: [id])
+}
+ */
+export const achievementSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(1000),
+  date: z.string(), // ISO date string
+  images: z.array(z.string().url()).optional(),
 });
 
 export const aiRouterSchema = z.object({
@@ -49,9 +62,10 @@ export const aiRouterSchema = z.object({
 });
 
 export const projectSchema = z.object({
-  
+
 });
 
 export const eventSchema = z.object({});
 
 export const updateUserSchema = z.object({});
+

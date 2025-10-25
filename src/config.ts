@@ -22,7 +22,8 @@ interface ConfigI {
     TEMPERATURE: number;
     MAX_TOKENS: number;
   };
-  prismaClient?: PrismaClient;
+  PRISMA_CLIENT?: PrismaClient;
+  BCRYPT_SALT_ROUNDS?: number;
 }
 
 //configuration object
@@ -44,7 +45,8 @@ export const Config = {
     TEMPERATURE: process.env.AI_TEMPERATURE ? parseFloat(process.env.AI_TEMPERATURE) : 0.7,
     MAX_TOKENS: process.env.AI_MAX_TOKENS ? parseInt(process.env.AI_MAX_TOKENS) : 1500,
   },
-  prismaClient: new PrismaClient(),
+  PRISMA_CLIENT: new PrismaClient(),
+  BCRYPT_SALT_ROUNDS: process.env.BCRYPT_SALT_ROUNDS ? parseInt(process.env.BCRYPT_SALT_ROUNDS) : 5,
 };
 
 /**
@@ -111,7 +113,7 @@ export function validateConfig(Config: ConfigI) {
     //TODO: verify ai provider
 
     //prisma validation
-    if (!Config.prismaClient) {
+    if (!Config.PRISMA_CLIENT) {
       logger.error("Prisma client not initialized");
       throw new Error("Prisma client not initialized");
     }

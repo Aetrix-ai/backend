@@ -18,18 +18,34 @@ model User {
   name     String
   password String
   role     String     @default("STUDENT")
-  skills   String[]
   bio      String?
   avatar   String?
   github   String?
   linkedin String?
   twitter  String?
   resume   String?
-  achievements String[]
-  certifications String[]
-  techStack String[]
+  achievements Achievement[]
+  skills   Skill[]
   projects Projects[]
   events   Event[]
+}
+
+model Skill {
+  id     Int    @id @default(autoincrement())
+  name   String
+  level  String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Achievement {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+  userId      Int
+  images     String[] // add any images
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model Projects {
@@ -59,3 +75,5 @@ model Event {
   userId      Int
   organizer   User     @relation(fields: [userId], references: [id])
 }
+
+
