@@ -54,9 +54,9 @@ model Projects {
   description String
   demoLink    String?
   repoLink    String?
-  demoImage   String?
-  demoVideo   String?
   techStack   String[]
+  images      String[] // add any images
+  videos      String[] // add any videos
   additionalInfo String?
   userId      Int
   owner       User    @relation(fields: [userId], references: [id])

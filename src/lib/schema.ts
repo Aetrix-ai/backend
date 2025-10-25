@@ -61,9 +61,46 @@ export const aiRouterSchema = z.object({
   prompt: z.string().min(1).max(5000),
 });
 
-export const projectSchema = z.object({
+/**
+ *id          Int
+  title       String
+  description String
+  demoLink    String?
+  repoLink    String?
+  techStack   String[]
+  images      String[] // add any images
+  videos      String[] // add any videos
+  additionalInfo String?
+  userId      Int
+  owner       User    @relation(fields: [userId], references: [id])
+ */
 
+export const projectSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(2000),
+  demoLink: z.string().url().optional(),
+  repoLink: z.string().url().optional(),
+  techStack: z.array(z.string()).optional(),
+  images: z.array(z.string().url()).optional(),
+  videos: z.array(z.string().url()).optional(),
+  additionalInfo: z.string().max(1000).optional(),
 });
+
+/**
+ * model Skill {
+  id     Int
+  name   String
+  level  String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+}
+ */
+
+export const skillSchema = z.object({
+  name: z.string().min(1).max(100),
+  level: z.string().min(1).max(100),
+});
+
 
 export const eventSchema = z.object({});
 
