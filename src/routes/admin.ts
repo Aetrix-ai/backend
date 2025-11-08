@@ -7,7 +7,7 @@
  * other admins can be created by super admin
  */
 import { Router } from "express";
-const adminRouter = Router();
+export const adminRouter = Router();
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { Config } from "../config";
