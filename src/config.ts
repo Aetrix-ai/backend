@@ -24,6 +24,8 @@ interface ConfigI {
   };
   PRISMA_CLIENT?: PrismaClient;
   BCRYPT_SALT_ROUNDS?: number;
+  SUPERADMIN_EMAIL?: string;
+  SUPERADMIN_PASSWORD?: string;
 }
 
 //configuration object
@@ -121,3 +123,13 @@ export function validateConfig(Config: ConfigI) {
 }
 
 
+export const permssions = {
+  MANAGE_USERS: "MANAGE_DB", // add, remove, update users or any related data
+  MANAGE_CONTENT: "MANAGE_CONTENT", // add, remove, update content
+  VIEW_ANALYTICS: "VIEW_ANALYTICS",
+  MANAGE_ADMINS: "MANAGE_ADMINS",
+  
+
+  // future permissions can be added here
+    // MANAGE_DEPLOYEMENTS: "MANAGE_DEPLOYEMENTS",
+}
