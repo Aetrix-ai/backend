@@ -10,3 +10,8 @@ multimediaRouter.post("/upload/images", async (req, res) => {
   // handle image upload
   res.send("upload images");
 });
+
+multimediaRouter.post("/upload/videos", async (req, res) => {
+  // handle video upload
+  res.send("upload videos");
+});
