@@ -77,3 +77,17 @@ model Event {
 }
 
 
+model admin {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+
+  /*
+  permissions is used to determine what actions an admin can perform
+  */
+  PERMISSIONS String[]
+
+  /*ranks is used to determine the level of admin , a ensure a admin with higher
+  rank can manage admin with lower rank */
+  rank  Int
+}

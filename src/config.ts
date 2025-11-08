@@ -24,6 +24,11 @@ interface ConfigI {
   };
   PRISMA_CLIENT?: PrismaClient;
   BCRYPT_SALT_ROUNDS?: number;
+
+  SUPERADMIN_EMAIL: string;
+  SUPERADMIN_PASSWORD?: string;
+
+  INIT_ADMIN: string;
 }
 
 //configuration object
@@ -47,6 +52,9 @@ export const Config = {
   },
   PRISMA_CLIENT: new PrismaClient(),
   BCRYPT_SALT_ROUNDS: process.env.BCRYPT_SALT_ROUNDS ? parseInt(process.env.BCRYPT_SALT_ROUNDS) : 5,
+  INIT_ADMIN: process.env.INIT_ADMIN || "false",
+  SUPERADMIN_EMAIL: process.env.SUPERADMIN_EMAIL || "",
+  SUPERADMIN_PASSWORD: process.env.SUPERADMIN_PASSWORD || "",
 };
 
 /**
@@ -117,7 +125,22 @@ export function validateConfig(Config: ConfigI) {
       logger.error("Prisma client not initialized");
       throw new Error("Prisma client not initialized");
     }
+
+    if (Config.INIT_ADMIN === "true") {
+      if (!Config.SUPERADMIN_EMAIL || !Config.SUPERADMIN_PASSWORD) {
+        logger.error("Missing SUPERADMIN_EMAIL or SUPERADMIN_PASSWORD for admin initialization");
+        throw new Error("Missing SUPERADMIN_EMAIL or SUPERADMIN_PASSWORD for admin initialization");
+      }
+    }
   }
 }
 
+export const permissions = {
+  MANAGE_USERS: "MANAGE_DB", // add, remove, update users or any related data
+  MANAGE_CONTENT: "MANAGE_CONTENT", // add, remove, update content
+  VIEW_ANALYTICS: "VIEW_ANALYTICS",
+  MANAGE_ADMINS: "MANAGE_ADMINS",
 
+  // future permissions can be added here
+  // MANAGE_DEPLOYEMENTS: "MANAGE_DEPLOYEMENTS",
+};
