@@ -3,6 +3,9 @@ import cors from "cors";
 import { Config, permissions, validateConfig } from "./config";
 import logger from "./lib/logger";
 import { pinoHttp } from "pino-http";
+import { adminRouter } from "./routes/admin";
+import { UserRouter } from "./routes/user";
+import { AiRouter } from "./routes/ai";
 
 
 /**
@@ -52,6 +55,13 @@ app.use(
 app.post("/health", (req, res) => {
   res.status(402).send("OK");
 });
+
+//handlers
+app.use("/admin" ,adminRouter);
+app.use("/user", UserRouter)
+app.use("/ai", AiRouter) // TODO: separate ai router
+
+
 
 app.listen(Config.SERVER.PORT, () => {
   logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
