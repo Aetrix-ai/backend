@@ -11,7 +11,8 @@ const adminRouter = Router();
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { Config } from "../config";
-
+import logger from "../lib/logger";
+import jwt from "jsonwebtoken";
 export const adminSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
@@ -20,12 +21,30 @@ export const adminSchema = z.object({
 });
 
 /** admin login */
-adminRouter.get("/login", (req, res) => {
-  ``;
-  res.send("Admin Login Page");
+adminRouter.get("/signin", async (req, res) => {
+  const { email, password } = req.body;
+  const isValid = adminSchema.safeParse({ email, password });
+  if (!isValid.success) {
+    return res.status(400).send(isValid.error);
+  }
+  try {
+    const admin = await Config.PRISMA_CLIENT?.admin.findUnique({
+      where: { email },
+    });
+    if (!admin) {
+      return res.status(404).send("Admin not found");
+    }
+    const isPasswordValid = bcrypt.compareSync(password, admin.password);
+    if (!isPasswordValid) {
+      return res.status(401).send("Invalid password");
+    }
+    const token = jwt.sign({ adminId: admin.id }, Config.JWT.ADMIN_JWT_SECRET, { expiresIn: "1h" });
+    res.status(200).send({ message: "Login successful", token });
+  } catch (err) {
+    logger.error({ err }, "Error during admin login:");
+    return res.status(500).send("Internal Server Error");
+  }
 });
-
-
 
 /** create admins */
 adminRouter.post("/create", async (req, res) => {
@@ -68,15 +87,13 @@ adminRouter.post("/create", async (req, res) => {
         rank: admin.rank + 1, // new admin rank is one level below the creator admin
       },
     });
-
     res.status(201).send({ message: "Admin created successfully", adminId: newAdmin?.id });
     return;
   } catch (err) {
-    console.error("Error creating admin:", err);
+    logger.error({ err }, "Error creating admin:");
     return res.status(500).send("Internal Server Error");
   }
 });
-
 
 adminRouter.post("/delete/:adminId", async (req, res) => {
   //@ts-ignore */
@@ -104,7 +121,7 @@ adminRouter.post("/delete/:adminId", async (req, res) => {
     res.status(200).send({ message: "Admin deleted successfully", adminId: deletedAdmin.id });
     return;
   } catch (err) {
-    console.error("Error deleting admin:", err);
+    logger.error({ err }, "Error deleting admin:");
     return res.status(500).send("Internal Server Error");
   }
 });
