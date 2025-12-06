@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int        @id @default(autoincrement())
+  email    String     @unique
+  name     String
+  password String
+  role     String     @default("STUDENT")
+  bio      String?
+  avatar   String?
+  github   String?
+  linkedin String?
+  twitter  String?
+  resume   String?
+  achievements Achievement[]
+  skills   Skill[]
+  projects Projects[]
+  events   Event[]
+}
+
+model Skill {
+  id     Int    @id @default(autoincrement())
+  name   String
+  level  String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Achievement {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+  userId      Int
+  images     String[] // add any images
+  user        User    @relation(fields: [userId], references: [id])
+}
+
+model Projects {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String
+  demoLink    String?
+  repoLink    String?
+  techStack   String[]
+  images      String[] // add any images
+  videos      String[] // add any videos
+  additionalInfo String?
+  sandbox     String?
+  userId      Int
+  owner       User    @relation(fields: [userId], references: [id])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  reg_url         String?
+  eventDate   DateTime
+  location    String
+  poster      String?
+  coverImage  String?
+  additionalInfo String?
+  userId      Int
+  organizer   User     @relation(fields: [userId], references: [id])
+}
+
+
+model admin {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+
+  /*
+  permissions is used to determine what actions an admin can perform
+  */
+  PERMISSIONS String[]
+
+  /*ranks is used to determine the level of admin , a ensure a admin with higher
+  rank can manage admin with lower rank */
+  rank  Int
+}
