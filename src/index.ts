@@ -7,6 +7,8 @@ import { adminRouter } from "./routes/admin";
 import { UserRouter } from "./routes/user";
 import { AiRouter } from "./routes/ai";
 import { SandboxRouter } from "./routes/sandbox";
+import { authRouter } from "./routes/auth";
+import { userAuthMiddleware } from "./middlewares/auth";
 
 /**
  * Initialize superadmin account if it doesn't exist
@@ -55,14 +57,15 @@ app.post("/health", (req, res) => {
 });
 
 //handlers
+app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
-app.use("/user", UserRouter);
-app.use("/ai", AiRouter); // TODO: separate ai router
-app.use("/sandbox", SandboxRouter);
+app.use("/user", userAuthMiddleware, UserRouter);
+app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
+app.use("/sandbox", userAuthMiddleware, SandboxRouter);
 
 app.listen(Config.SERVER.PORT, () => {
   logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
-  logger.error( "Currrent Directory:" + __dirname);
+  logger.error("Currrent Directory:" + __dirname);
   try {
     validateConfig(Config);
     if (Config.INIT_ADMIN === "true") {
