@@ -1,7 +1,7 @@
 import pino from "pino";
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
+  level: process.env.LOG_LEVEL || "error",
   transport: {
     target: "pino-pretty",
     options: {
@@ -9,6 +9,7 @@ const logger = pino({
       translateTime: true, // Show readable time
       levelFirst: true, // Show level (INFO, ERROR, etc.) first
     },
+   // only log sta
   },
 });
 

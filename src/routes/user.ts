@@ -97,18 +97,17 @@ UserRouter.post("/profile/achievement", async (req, res) => {
   try {
     const achievement = await Config.PRISMA_CLIENT.achievement.create({
       data: {
-        userId: userID,
         title: payload.data.title,
         description: payload.data.description,
-        images: payload.data.images || [],
-        date: payload.data.date,
+        date: new Date(payload.data.date),
+        userId: userID,
       },
     });
 
     logger.info(`Created achievement for user id: ${userID}`);
     return res.status(201).json(achievement);
   } catch (error: any) {
-    logger.error({ message: error }, `Error creating achievement:`);
+    logger.error(error, `Error creating achievement:`);
     return res.status(500).send("Internal Server Error");
   }
 });
