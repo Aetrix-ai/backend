@@ -2,8 +2,6 @@ import { Router } from "express";
 import { achievementSchema, projectSchema, skillSchema, userSchema } from "../lib/schema";
 import { Config } from "../config";
 import logger from "../lib/logger";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 
 export const UserRouter: Router = Router();
 
@@ -211,6 +209,7 @@ UserRouter.post("/profile/project", async (req, res) => {
         userId: userId,
       },
     });
+    res.status(201).json({ message: "Project created successfully", id });
   } catch (err) {
     logger.error({ message: err }, "Error creating project");
   }
@@ -228,12 +227,12 @@ UserRouter.delete("/profile/project/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    await Config.PRISMA_CLIENT.projects.deleteMany({
+    const result = await Config.PRISMA_CLIENT.projects.deleteMany({
       where: { id: projectID, userId: userID },
     });
 
     logger.info(`Deleted project id: ${projectID} for user id: ${userID}`);
-    return res.status(200).send("Project deleted");
+    return res.status(200).json({ message: "Project deleted successfully", affectedRows: result.count });
   } catch (error: any) {
     logger.error({ message: error }, `Error deleting project:`);
     return res.status(500).send("Internal Server Error");
@@ -264,12 +263,21 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
     }
   }
   try {
-    await Config.PRISMA_CLIENT.projects.updateMany({
+    const find = await Config.PRISMA_CLIENT.projects.findUnique({
+      where: { id: projectID, userId: userID },
+    });
+
+    if (!find) {
+      logger.warn(`Project id: ${projectID} for user id: ${userID} not found`);
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    const result = await Config.PRISMA_CLIENT.projects.update({
       where: { id: projectID, userId: userID },
       data,
     });
     logger.info(`Updated project id: ${projectID} for user id: ${userID}`);
-    return res.status(200).send("Project Updated");
+    return res.status(200).json({ message: "Project updated successfully", affectedRows: result });
   } catch (error: any) {
     logger.error({ message: error }, `Error updating project:`);
     return res.status(500).send("Internal Server Error");
@@ -325,6 +333,7 @@ UserRouter.post("/profile/skills", async (req, res) => {
         userId: userId,
       },
     });
+    res.status(201).json({ message: "Skill created successfully", id });
   } catch (err) {
     logger.error({ message: err }, "Error creating skill");
   }
@@ -342,12 +351,11 @@ UserRouter.delete("/profile/skills/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    await Config.PRISMA_CLIENT.skill.deleteMany({
+    const result = await Config.PRISMA_CLIENT.skill.deleteMany({
       where: { id: skillID, userId: userID },
     });
-
     logger.info(`Deleted skill id: ${skillID} for user id: ${userID}`);
-    return res.status(200).send("Skill deleted");
+    return res.status(200).json({ message: "Skill deleted successfully", affectedRows: result.count });
   } catch (error: any) {
     logger.error({ message: error }, `Error deleting skill:`);
     return res.status(500).send("Internal Server Error");
@@ -378,14 +386,23 @@ UserRouter.put("/profile/skills/:id", async (req, res) => {
     }
   }
   try {
-    await Config.PRISMA_CLIENT.skill.updateMany({
+    const find = await Config.PRISMA_CLIENT.skill.findUnique({
+      where: { id: skillID, userId: userID },
+    });
+
+    if (!find) {
+      logger.warn(`Skill id: ${skillID} for user id: ${userID} not found`);
+      return res.status(404).json({ message: "Skill not found" });
+    }
+
+    const result = await Config.PRISMA_CLIENT.skill.update({
       where: { id: skillID, userId: userID },
       data,
     });
     logger.info(`Updated skill id: ${skillID} for user id: ${userID}`);
-    return res.status(200).send("Skill Updated");
+    return res.status(200).json({ message: "Skill updated successfully", affectedRows: result });
   } catch (error: any) {
-    logger.error({ message: error }, `Error updating skill:`);
+    logger.error(error, `Error updating skill:`);
     return res.status(500).send("Internal Server Error");
   }
 });
