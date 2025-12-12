@@ -1,9 +1,10 @@
-
 import { config } from "dotenv";
 import logger from "./lib/logger";
 import { PrismaClient } from "@prisma/client";
 config();
 const prisma = new PrismaClient();
+
+// TODO: move prisma client to separate file and import here
 // Define the shape of the configuration object
 interface ConfigI {
   ENV: string;
@@ -30,6 +31,8 @@ interface ConfigI {
   SUPERADMIN_PASSWORD?: string;
 
   INIT_ADMIN: string;
+
+  IMAGEKIT_PRIVATE_KEY: string;
 }
 
 //configuration object
@@ -56,7 +59,11 @@ export const Config: ConfigI = {
   INIT_ADMIN: process.env.INIT_ADMIN || "false",
   SUPERADMIN_EMAIL: process.env.SUPERADMIN_EMAIL || "",
   SUPERADMIN_PASSWORD: process.env.SUPERADMIN_PASSWORD || "",
+  IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY || "",
 };
+
+//TODO: refactor and logic improvements needed
+// reduce env no of variables
 
 /**
  * Validate configuration object

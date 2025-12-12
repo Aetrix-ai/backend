@@ -9,6 +9,7 @@ import { AiRouter } from "./routes/ai";
 import { SandboxRouter } from "./routes/sandbox";
 import { authRouter } from "./routes/auth";
 import { userAuthMiddleware } from "./middlewares/auth";
+import { mediaRouter } from "./routes/media";
 
 /**
  * Initialize superadmin account if it doesn't exist
@@ -62,7 +63,7 @@ app.use("/admin", adminRouter);
 app.use("/user", userAuthMiddleware, UserRouter);
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
 app.use("/sandbox", userAuthMiddleware, SandboxRouter);
-
+app.use("/media", userAuthMiddleware, mediaRouter);
 app.listen(Config.SERVER.PORT, () => {
   logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
   logger.error("Currrent Directory:" + __dirname);
