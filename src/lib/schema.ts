@@ -22,6 +22,24 @@ import { z } from "zod";
 
  */
 
+export const userUpdateSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters").max(100),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional().or(z.literal("")),
+  avatar: z.string().url("Invalid URL").optional().or(z.literal("")),
+  github: z.string().url("Invalid URL").optional().or(z.literal("")),
+  linkedin: z.string().url("Invalid URL").optional().or(z.literal("")),
+  twitter: z.string().url("Invalid URL").optional().or(z.literal("")),
+  resume: z.string().url("Invalid URL").optional().or(z.literal("")),
+});
+/**
+   *name: z.string().min(3, "Name must be at least 3 characters").max(100),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional().or(z.literal("")),
+  avatar: z.string().url("Invalid URL").optional().or(z.literal("")),
+  github: z.string().url("Invalid URL").optional().or(z.literal("")),
+  linkedin: z.string().url("Invalid URL").optional().or(z.literal("")),
+  twitter: z.string().url("Invalid URL").optional().or(z.literal("")),
+  resume: z.string().url("Invalid URL").optional().or(z.literal("")),
+   */
 export const userSchema = z.object({
   name: z.string().min(3).max(100),
   email: z.string().email(),
@@ -101,12 +119,10 @@ export const skillSchema = z.object({
   level: z.string().min(1).max(100),
 });
 
-
 export const eventSchema = z.object({});
 
 export const updateUserSchema = z.object({});
 
-
 export const SandBoxSchema = z.object({
   projectId: z.number(),
-})
+});

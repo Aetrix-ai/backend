@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { achievementSchema, projectSchema, skillSchema, userSchema } from "../lib/schema";
+import e, { Router } from "express";
+import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema";
 import { Config } from "../config";
 import logger from "../lib/logger";
 
@@ -47,10 +47,11 @@ UserRouter.get("/profile", async (req, res) => {
  * Update User Profile
  */
 UserRouter.put("/profile", async (req, res) => {
-  const payload = userSchema.partial().safeParse(req.body);
+  console.log("Update profile request received:", req.body);
+  const payload = userUpdateSchema.safeParse(req.body);
   if (!payload.success) {
-    logger.warn({ message: payload.error }, `Invalid user profile update payload`);
-    return res.status(400).send(payload.error);
+    logger.warn({ message: JSON.parse(payload.error.message) }, `Invalid user profile update payload`);
+    return res.status(400).json({ error: JSON.parse(payload.error.message) });
   }
   //@ts-ignore
   const userID = req.user.id;
@@ -271,7 +272,7 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
       logger.warn(`Project id: ${projectID} for user id: ${userID} not found`);
       return res.status(404).json({ message: "Project not found" });
     }
-    
+
     const result = await Config.PRISMA_CLIENT.projects.update({
       where: { id: projectID, userId: userID },
       data,
