@@ -12,7 +12,7 @@ const client = new ImageKit({
 
   privateKey: Config.IMAGEKIT_PRIVATE_KEY,
 });
-mediaRouter.get("/authorization", (req, res) => {
+mediaRouter.get("/authenticate-upload", (req, res) => {
   try {
     const authenticationParameters = client.helper.getAuthenticationParameters();
     res.json(authenticationParameters);

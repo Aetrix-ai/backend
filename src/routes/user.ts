@@ -86,6 +86,7 @@ UserRouter.put("/profile", async (req, res) => {
  * Add User Achievement
  */
 UserRouter.post("/profile/achievement", async (req, res) => {
+  console.log("Add achievement request received:", req.body);
   const payload = achievementSchema.safeParse(req.body);
   if (!payload.success) {
     logger.warn({ message: payload.error }, `Invalid achievement payload`);
@@ -100,6 +101,7 @@ UserRouter.post("/profile/achievement", async (req, res) => {
         description: payload.data.description,
         date: new Date(payload.data.date),
         userId: userID,
+        images: payload.data.images,
       },
     });
 
@@ -155,6 +157,55 @@ UserRouter.delete("/profile/achievements/:id", async (req, res) => {
     return res.status(500).send("Internal Server Error");
   }
 });
+
+/**
+ * Update User Achievement
+ */
+UserRouter.put("/profile/achievement/:id", async (req, res) => {
+  const achievementID = parseInt(req.params.id, 10);
+  if (isNaN(achievementID)) {
+    logger.warn(`Invalid achievement ID: ${req.params.id}`);
+    return res.status(400).send("Invalid achievement ID");
+  }
+  const payload = achievementSchema.partial().safeParse(req.body);
+  if (!payload.success) {
+    logger.warn({ message: payload.error }, `Invalid achievement update payload`);
+    return res.status(400).send(payload.error);
+  }
+  //@ts-ignore
+  const userID = req.user.id;
+  const data: Record<string, {}> = {};
+  for (const key in payload.data) {
+    const _key = key as keyof typeof payload.data;
+    if (payload.data[_key] !== undefined) {
+      if (_key === "date") {
+        data[_key] = new Date(payload.data[_key] as string);
+      } else {
+        data[_key as string] = payload.data[_key];
+      }
+    }
+  }
+  try {
+    const find = await Config.PRISMA_CLIENT.achievement.findUnique({
+      where: { id: achievementID, userId: userID },
+    });
+
+    if (!find) {
+      logger.warn(`Achievement id: ${achievementID} for user id: ${userID} not found`);
+      return res.status(404).json({ message: "Achievement not found" });
+    }
+
+    const result = await Config.PRISMA_CLIENT.achievement.update({
+      where: { id: achievementID, userId: userID },
+      data,
+    });
+    logger.info(`Updated achievement id: ${achievementID} for user id: ${userID}`);
+    return res.status(200).json({ message: "Achievement updated successfully", achievement: result });
+  } catch (error: any) {
+    logger.error({ message: error }, `Error updating achievement:`);
+    return res.status(500).send("Internal Server Error");
+  }
+});
 /**
  * USER PROJECT ROUTES
   - Add Project
@@ -166,7 +217,7 @@ UserRouter.delete("/profile/achievements/:id", async (req, res) => {
 /**
  * Get User Projects
  */
-UserRouter.get("/profile/project", async (req, res) => {
+UserRouter.get("/profile/projects", async (req, res) => {
   //@ts-ignore
   const userId = req.user.id;
   try {
@@ -213,6 +264,35 @@ UserRouter.post("/profile/project", async (req, res) => {
     res.status(201).json({ message: "Project created successfully", id });
   } catch (err) {
     logger.error({ message: err }, "Error creating project");
+  }
+});
+
+/**
+ * get a single User Project
+ */
+UserRouter.get("/profile/project/:id", async (req, res) => {
+  const projectID = parseInt(req.params.id, 10);
+  if (isNaN(projectID)) {
+    logger.warn(`Invalid project ID: ${req.params.id}`);
+    return res.status(400).send("Invalid project ID");
+  }
+  //@ts-ignore
+  const userID = req.user.id;
+  try {
+    const project = await Config.PRISMA_CLIENT.projects.findUnique({
+      where: { id: projectID, userId: userID },
+    });
+
+    if (!project) {
+      logger.warn(`Project id: ${projectID} for user id: ${userID} not found`);
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    logger.info(`Fetched project id: ${projectID} for user id: ${userID}`);
+    return res.status(200).json(project);
+  } catch (error: any) {
+    logger.error({ message: error }, `Error fetching project:`);
+    return res.status(500).send("Internal Server Error");
   }
 });
 

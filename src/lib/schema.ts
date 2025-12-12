@@ -72,7 +72,7 @@ export const achievementSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(1000),
   date: z.string(), // ISO date string
-  images: z.array(z.string().url()).optional(),
+  images: z.array(z.string().url()),
 });
 
 export const aiRouterSchema = z.object({
