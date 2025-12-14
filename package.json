@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "docker-compose down && docker-compose up -d && tsc -b && node dist/index.js"
+    "dev": "docker-compose down && docker-compose up -d && tsc -b && node dist/index.js",
+    "e2b:build:dev": "tsx aetrix-react-sandbox/build.dev.ts",
+    "e2b:build:prod": "tsx aetrix-react-sandbox/build.prod.ts"
   },
   "repository": {
     "type": "git",

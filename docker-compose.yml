@@ -1,4 +1,3 @@
-
 services:
   database:
     image: postgres:latest
@@ -11,7 +10,9 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+
 volumes:
   db_data:
-
+networks:
+  code-server:
 #connetction string postgres://aetrix:aetrix_password@database:5432/aetrix_db

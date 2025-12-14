@@ -66,7 +66,7 @@ app.use("/sandbox", userAuthMiddleware, SandboxRouter);
 app.use("/media", userAuthMiddleware, mediaRouter);
 app.listen(Config.SERVER.PORT, () => {
   logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
-  logger.error("Currrent Directory:" + __dirname);
+  logger.error(`===============================`);
   try {
     validateConfig(Config);
     if (Config.INIT_ADMIN === "true") {

@@ -126,3 +126,22 @@ export const updateUserSchema = z.object({});
 export const SandBoxSchema = z.object({
   projectId: z.number(),
 });
+
+/*
+model AetrixProjects {
+  id          Int     @id @default(autoincrement())
+  type        String // portfolio or event
+  title       String
+  description String
+  repoLink    String?
+  sandbox     String // should be removed
+  deployLink  String?
+  user        User?   @relation(fields: [userId], references: [id])
+  userId      Int?
+}
+*/
+export const InitializeScehma = z.object({
+  type : z.enum(["portfolio", "event"]),
+  title : z.string().min(1).max(200),
+  description : z.string().min(1).max(2000).optional(),
+});
