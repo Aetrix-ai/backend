@@ -11,8 +11,8 @@ const sandboxService = new SandboxService();
 
 SandboxRouter.post("/", async (req, res) => {
   try {
-  
-    const sbx = await sandboxService.getReactSandBox(1);
+
+    const sbx = await sandboxService.getNewSandBox(1);
     res.status(200).json({ ...sbx });
   } catch (err: any) {
     logger.error(err, "Sandbox error");
