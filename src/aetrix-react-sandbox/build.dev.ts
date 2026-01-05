@@ -4,7 +4,9 @@ import { template } from "./template";
 
 async function main() {
   await Template.build(template, {
-    alias: "aetrix-react-sandbox-dev",
+    alias: "aetrix-sandbox-dev",
+    cpuCount: 8,
+    memoryMB: 8192,
     onBuildLogs: defaultBuildLogger(),
   });
 }

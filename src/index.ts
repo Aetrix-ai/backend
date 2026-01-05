@@ -51,7 +51,7 @@ async function InitSuperadmin() {
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(pinoHttp({ logger }));
+
 
 app.post("/health", (req, res) => {
   res.status(402).send("OK");
@@ -62,7 +62,7 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use("/user", userAuthMiddleware, UserRouter);
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
-app.use("/sandbox", userAuthMiddleware, SandboxRouter);
+app.use("/sandbox", SandboxRouter);
 app.use("/media", userAuthMiddleware, mediaRouter);
 app.listen(Config.SERVER.PORT, () => {
   logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);

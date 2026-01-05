@@ -3,7 +3,7 @@ import { template } from './template'
 
 async function main() {
   await Template.build(template, {
-    alias: 'aetrix-react-sandbox',
+    alias: 'aetrix-sandbox',
     onBuildLogs: defaultBuildLogger(),
   });
 }

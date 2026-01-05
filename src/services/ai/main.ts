@@ -33,7 +33,12 @@ export class AIservice {
         model: this.OllamaModel(),
         tools: [...tools],
       });
-      const res = await agent.invoke({ messages: [{ role: "system", content: await getSystemPrompt() },{ role: "user", content: Prompt }] });
+      const res = await agent.invoke({
+        messages: [
+          { role: "system", content: await getSystemPrompt() },
+          { role: "user", content: Prompt },
+        ],
+      });
       logger.info({ res }, "AI Service Generated Response:");
       return this.extractText(res);
     } catch (error) {
