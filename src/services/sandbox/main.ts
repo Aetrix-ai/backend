@@ -4,7 +4,13 @@ import logger from "../../lib/logger.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
 
+// deprecated
 export class SandboxService {
+
+
+
+
+
   /**
    * get a react sandbox by project id
    * returns sandbox id (from db)

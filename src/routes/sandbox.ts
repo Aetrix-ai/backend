@@ -7,11 +7,13 @@ import { Config } from "../config";
 import { SandboxService } from "../services/sandbox/main";
 import { SandBoxSchema } from "../lib/schema";
 
+
+// legacy code
+// will be removed later 
 const sandboxService = new SandboxService();
 
 SandboxRouter.post("/", async (req, res) => {
   try {
-
     const sbx = await sandboxService.getNewSandBox(1);
     res.status(200).json({ ...sbx });
   } catch (err: any) {

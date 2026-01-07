@@ -9,9 +9,9 @@ export const mediaRouter: Router = Router();
  */
 
 const client = new ImageKit({
-
   privateKey: Config.IMAGEKIT_PRIVATE_KEY,
 });
+
 mediaRouter.get("/authenticate-upload", (req, res) => {
   try {
     const authenticationParameters = client.helper.getAuthenticationParameters();
