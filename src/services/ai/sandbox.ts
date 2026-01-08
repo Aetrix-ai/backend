@@ -37,12 +37,10 @@ export async function createAISandbox(userId: string): Promise<string> {
   await sbx.commands.run("cd templates/react-starter && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
     background: true,
   });
-  console.log(await sbx.commands.run("pwd"))
-    console.log(await sbx.commands.run("ls"))
+  console.log(await sbx.commands.run("pwd"));
+  console.log(await sbx.commands.run("ls"));
   logger.info("start code server");
-  await sbx.commands.run("cd templates/react-starter && npx vite dev --port 5173", {
-    background: true,
-  });
+  await NpmRunDev(sbx);
   logger.info(`$visit ${sbx.getHost(5173)}`);
   logger.info("started projects (dev)");
   return id;
@@ -86,9 +84,21 @@ export async function connectToSandbox(userId: string) {
   await client.connect(transport);
   const tools = await getTools(client);
   logger.info(`MCP connection established to the sandbox - user:${userId} sandbox:${sbxid}`);
-  logger.info("avialable tools")
-  tools.map((tool , i)=>{
-    logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`)
-  })
-  return { sbx, client , tools };
+  logger.info("avialable tools");
+  tools.map((tool, i) => {
+    logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
+  });
+  return { sbx, client, tools };
+}
+
+export async function NpmRunDev(sbx: Sandbox) {
+  const Startres = await sbx.commands.run("cd templates/react-starter && npx vite dev --port 5173", {
+    background: true,
+  });
+  logger.debug({ Startres }, "Started Vite dev server in sandbox");
+  const Checkres = await sbx.commands.run(`
+      until ss -tuln | grep -q ':5173'; do sleep 0.5; done
+    `);
+  logger.debug({ Checkres }, "Started Vite dev server in sandbox");
+  logger.info("Restarting react server");
 }

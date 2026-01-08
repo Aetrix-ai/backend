@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc -b && node dist/index.js",
     "e2b:build:dev": "tsc -b &&  node dist/aetrix-react-sandbox/build.dev.js",
-    "e2b:build:prod": "tsx aetrix-react-sandbox/build.prod.ts"
+    "e2b:build:prod": "tsx aetrix-react-sandbox/build.prod.ts",
+    "e2b:kill":"tsc -b && node dist/kill.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "@langchain/google-genai": "^2.1.6",
     "@langchain/groq": "^1.0.2",
     "@langchain/ollama": "^1.0.3",
+    "@langchain/openai": "^1.2.1",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@prisma/client": "^6.17.1",
     "@types/bcrypt": "^6.0.0",
@@ -51,5 +53,6 @@
   },
   "devDependencies": {
     "prisma": "^6.17.1"
+
   }
 }

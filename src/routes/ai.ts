@@ -2,7 +2,7 @@ import { Router } from "express";
 import { aiRouterSchema } from "../lib/schema";
 
 import { AIservice } from "../services/ai/main";
-import { connectToSandbox, createAISandbox, killSandbox } from "../services/ai/sandbox";
+import { connectToSandbox, createAISandbox, killSandbox, NpmRunDev } from "../services/ai/sandbox";
 import logger from "../lib/logger";
 import { ChatAI } from "../services/ai/chat";
 export const AiRouter: Router = Router();
@@ -14,12 +14,12 @@ AiRouter.post("/chat", async (req, res) => {
       logger.warn("Invalid input received in AI Router");
       return res.status(400).send({ error: "Invalid input" });
     }
-    const aiService = AIservice.getInstance();
 
     //@ts-ignore
     const userID = req.user.id;
     const Box = await connectToSandbox(userID);
     const aiREsp = await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools })
+    await NpmRunDev(Box!.sbx)
     res.json({
       chat: aiREsp,
     });

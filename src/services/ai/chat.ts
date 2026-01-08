@@ -61,6 +61,16 @@ TOOL USAGE GUIDELINES:
 - To overwrite or create files → use filesystem-write_file (use with caution)
 - To rename or move → use filesystem-move_file
 
+CRITICAL TOOL CALLING RULE:
+
+When a task requires creating, editing, or writing files:
+- You MUST call the appropriate filesystem tool.
+- You MUST NOT include code blocks or file contents in plain text.
+- You MUST pass the file content ONLY as tool arguments.
+- You MUST NOT explain the code before the tool call.
+
+If you describe code in natural language instead of calling a tool, the request is considered FAILED.
+
 IMPORTANT:
 - You must ONLY call tools from the list above.
 - Never attempt shell commands or command execution.
@@ -75,13 +85,22 @@ WORKFLOW FOR MULTI-STEP TASKS:
 
 
 `;
-const llm = new ChatGroq({
-  model: "openai/gpt-oss-120b",
-  temperature: 0,
-  maxTokens: undefined,
-  maxRetries: 2,
+// const llm = new ChatGroq({
+//   model: "llama-3.3-70b-versatile",
+//   temperature: 0,
+//   maxTokens: undefined,
+//   maxRetries: 2,
+//   // other params...
+// });
+
+
+import { ChatOpenAI } from "@langchain/openai"
+
+const llm = new ChatOpenAI({
+  model: "gpt-5-mini-2025-08-07",
+  temperature: 0.5,
   // other params...
-});
+})
 
 export async function ChatAI({ userPrompt, tools }: { userPrompt: string; tools: DynamicStructuredTool[] }) {
   const agent = createAgent({
@@ -96,24 +115,20 @@ export async function ChatAI({ userPrompt, tools }: { userPrompt: string; tools:
         role: "human",
         content: `
         Task:
-        given you a react project
-        insprect and update it content to
-        create a simple home page saying hello welcome to aetrix`,
+        given you a react project do the given task
+        Task : ${userPrompt}
+        `,
       },
     ],
   });
   console.log(aiMsg.messages);
-  return extractFinalAIMessage(aiMsg.messages)
+  return extractFinalAIMessage(aiMsg.messages);
 }
-
 
 function extractFinalAIMessage(messages: any[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
-    if (
-      msg._getType?.() === "ai" &&
-      msg.response_metadata?.finish_reason === "stop"
-    ) {
+    if (msg._getType?.() === "ai" && msg.response_metadata?.finish_reason === "stop") {
       return msg.content;
     }
   }
