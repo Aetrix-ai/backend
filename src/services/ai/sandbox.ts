@@ -14,7 +14,7 @@ export async function createAISandbox(userId: string): Promise<string> {
   const sbxId = await redis.get(userId);
   if (sbxId) {
     logger.warn(`Sandbox already exists for user: ${userId} id: ${sbxId}`);
-    logger.debug("fix me");
+    return sbxId as string
   }
 
   const sbx = await Sandbox.create("aetrix-sandbox-dev", {

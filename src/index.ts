@@ -11,6 +11,7 @@ import { userAuthMiddleware } from "./middlewares/auth";
 import { mediaRouter } from "./routes/media";
 
 import { Redis } from "@upstash/redis";
+import { CleanUp } from "./kill";
 export const redis = Redis.fromEnv();
 const app = express();
 app.use(cors());
@@ -30,6 +31,14 @@ app.use("/media", userAuthMiddleware, mediaRouter);
 // deprecated
 app.use("/sandbox", SandboxRouter);
 
-app.listen(Config.SERVER.PORT, () => {
-  logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
-});
+async function StartServer() {
+  if (process.env.FRESH_START == "true") {
+    await CleanUp();
+  }
+  app.listen(Config.SERVER.PORT, () => {
+    logger.info(`Server is running on PORT: ${Config.SERVER.PORT}`);
+  });
+}
+
+StartServer()
+
