@@ -1,13 +1,19 @@
 import { Router } from "express";
 import { aiRouterSchema } from "../lib/schema";
 
-import { AIservice } from "../services/ai/main";
 import { connectToSandbox, createAISandbox, killSandbox, NpmRunDev } from "../services/ai/sandbox";
 import logger from "../lib/logger";
 import { ChatAI } from "../services/ai/chat";
 export const AiRouter: Router = Router();
 
 AiRouter.post("/chat", async (req, res) => {
+  res.status(200);
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.flushHeaders(); // important
+
   try {
     const payload = aiRouterSchema.safeParse(req.body);
     if (!payload.success) {
@@ -18,16 +24,15 @@ AiRouter.post("/chat", async (req, res) => {
     //@ts-ignore
     const userID = req.user.id;
     const Box = await connectToSandbox(userID);
-    const aiREsp = await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools })
-    await NpmRunDev(Box!.sbx)
-    res.json({
-      chat: aiREsp,
-    });
-  } catch (e) {
-    logger.error(e);
-    res.status(500).json({
-      msg: "failed to delete sandbo",
-    });
+    await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools, res });
+    await NpmRunDev(Box!.sbx);
+  } catch (err) {
+    logger.error(err);
+    if (!res.headersSent) {
+      res.status(500).json({ msg: "chat error" });
+    } else {
+      res.end();
+    }
   }
 });
 

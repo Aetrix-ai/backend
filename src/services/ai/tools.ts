@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client";
 import { DynamicStructuredTool, Tool } from "langchain";
 import { z, ZodTypeAny } from "zod";
-
+import { LangGraphRunnableConfig } from "@langchain/langgraph";
 /**
  * VERY SMALL JSON Schema → Zod converter
  * (enough for MCP tools)
@@ -60,7 +60,7 @@ export async function getTools(client: Client): Promise<DynamicStructuredTool[]>
       description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
       schema,
 
-      func: async (input: any) => {
+      func: async (input: any ,) => {
         const result = await client.callTool({
           name: mcpTool.name,
           arguments: input ?? {},

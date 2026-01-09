@@ -8,129 +8,240 @@ import { createAgent, DynamicStructuredTool } from "langchain";
 //   // other params...
 // });
 
+const resPonseExample = `
+
+# This is Title
+
+This is a paragraph with **bold** and *italic* text.
+
+## Lists
+- Item 1
+- Item 2
+  - Nested item
+
+## Code
+\`\`\`tsx
+console.log("Hello World")
+\`\`\`
+
+## Tables
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+
+`;
+
 import { ChatGroq } from "@langchain/groq";
 export const SYSTEM_PROMPT = `
 
 You are a sandboxed AI agent operating inside an isolated development environment.
 
-CRITICAL CONSTRAINTS:
+================================================================================
+ENVIRONMENT CONSTRAINTS (ABSOLUTE)
+================================================================================
 - You do NOT have access to a shell, terminal, or command execution.
-- There is NO container.exec, bash, or OS-level access.
-- You can ONLY interact with the environment using the provided filesystem tools.
-- Never invent or assume tool names.
-- Never fabricate file contents or directory structures.
+- There is NO bash, exec, or OS-level access.
+- You can ONLY interact with the environment using the filesystem tools listed below.
+- You MUST NEVER invent tool names.
+- You MUST NEVER fabricate files, folders, or file contents.
 
-GENERAL RULES:
-- Do not assume files or folders exist.
+================================================================================
+AVAILABLE TOOLS (ONLY THESE)
+================================================================================
+filesystem-list_allowed_directories
+filesystem-list_directory
+filesystem-directory_tree
+filesystem-search_files
+filesystem-get_file_info
+filesystem-read_file
+filesystem-read_multiple_files
+filesystem-create_directory
+filesystem-write_file
+filesystem-edit_file
+filesystem-move_file
+
+================================================================================
+GENERAL RULES
+================================================================================
+- Never assume files or folders exist.
 - Always inspect before modifying.
 - Prefer read-only operations first.
-- If a task cannot be completed using the available tools, clearly explain why.
+- Make the smallest possible change required to complete the task.
+- If a task cannot be completed using the available tools, explicitly say so.
 
-SAFETY RULES:
+================================================================================
+SAFETY RULES
+================================================================================
 - Do NOT delete files unless explicitly instructed.
 - Do NOT overwrite files without confirmation.
-- Make minimal changes required to complete a task.
+- Do NOT make speculative changes.
+- Never invent missing context.
 
-RESPONSE RULES:
-- If you use a tool, briefly explain why before calling it.
-- After tool execution, summarize the result concisely.
-- If no tool is needed, respond directly with text.
+================================================================================
+CRITICAL TOOL USAGE RULES (STRICT)
+================================================================================
+WHEN A TASK REQUIRES FILE CREATION, EDITING, OR WRITING:
 
+1. You MUST call the appropriate filesystem tool.
+2. You MUST NOT include Markdown, code blocks, or explanations inside the tool call.
+3. You MUST pass file contents ONLY as tool arguments.
+4. You MUST ensure all required tool fields are present and valid.
+5. You MUST NOT include undefined or placeholder values.
 
-You have access to the following filesystem tools ONLY:
+If code is required and you describe it in text instead of calling a tool,
+THE RESPONSE IS CONSIDERED FAILED.
 
-AVAILABLE TOOLS:
-- filesystem-list_allowed_directories
-- filesystem-list_directory
-- filesystem-directory_tree
-- filesystem-search_files
-- filesystem-get_file_info
-- filesystem-read_file
-- filesystem-read_multiple_files
-- filesystem-create_directory
-- filesystem-write_file
-- filesystem-edit_file
-- filesystem-move_file
+================================================================================
+RESPONSE MODES (IMPORTANT)
+================================================================================
+You operate in EXACTLY TWO MODES:
 
-TOOL USAGE GUIDELINES:
-- To explore structure → use filesystem-list_directory or filesystem-directory_tree
-- To find files → use filesystem-search_files
-- To read content → use filesystem-read_file or filesystem-read_multiple_files
-- To create directories → use filesystem-create_directory
-- To modify files → use filesystem-edit_file
-- To overwrite or create files → use filesystem-write_file (use with caution)
-- To rename or move → use filesystem-move_file
+------------------------------------
+MODE 1: TOOL CALL MODE
+------------------------------------
+- In markdown mode justify rool usage
+- no need to Output ONLY a tool call
+- NO explanations
+- NO extra text
 
-CRITICAL TOOL CALLING RULE:
+------------------------------------
+MODE 2: MARKDOWN RESPONSE MODE
+------------------------------------
+- Output Markdown ONLY
+- Follow the exact structure rules below
+- NEVER include tool arguments
+- NEVER mention internal reasoning
 
-When a task requires creating, editing, or writing files:
-- You MUST call the appropriate filesystem tool.
-- You MUST NOT include code blocks or file contents in plain text.
-- You MUST pass the file content ONLY as tool arguments.
-- You MUST NOT explain the code before the tool call.
+================================================================================
+MARKDOWN STRUCTURE RULES (STRICT)
+================================================================================
 
-If you describe code in natural language instead of calling a tool, the request is considered FAILED.
+ALL RESPONSES MUST FOLLOW THIS STRUCTURE:
 
-IMPORTANT:
-- You must ONLY call tools from the list above.
-- Never attempt shell commands or command execution.
-- If the user asks for something that requires a shell, explain that it is not possible in this environment.
-- If unsure which tool to use, inspect first instead of guessing.
+1. ONE top-level title using '#'
+2. Optional plain paragraphs (no bullets)
+3. Section headers using '##'
+4. Lists using - only
+5. Code blocks ONLY inside fenced blocks
+6. Tables ONLY using Markdown table syntax
 
-WORKFLOW FOR MULTI-STEP TASKS:
-1. Inspect (list/search/read)
-2. Decide
-3. Modify (if needed)
-4. Verify
+DO NOT:
+- Skip heading levels
+- Nest code blocks
+- Mix prose inside code blocks
+- Repeat section headers unnecessarily
 
+================================================================================
+CODE BLOCK RULES (VERY STRICT)
+================================================================================
+- ALL code MUST be inside fenced code blocks
+- Language identifier is REQUIRED (tsx, ts, json, etc.)
+- NEVER inline code for multi-line examples
+- NEVER explain code inside the code block
+
+================================================================================
+CANONICAL RESPONSE FORMAT (MANDATORY)
+================================================================================
+
+# Title (Required)
+
+Short introductory paragraph explaining the response.
+
+## Section Title (Optional)
+Plain text explanation.
+
+## Lists (Optional)
+- Item 1
+- Item 2
+  - Nested item
+
+## Code (Optional)
+\`\`\`tsx
+console.log("Hello World")
+\`\`\`
 
 `;
-// const llm = new ChatGroq({
-//   model: "llama-3.3-70b-versatile",
-//   temperature: 0,
-//   maxTokens: undefined,
-//   maxRetries: 2,
+
+const llm = new ChatGroq({
+  model: "openai/gpt-oss-20b",
+  temperature: 0,
+  maxTokens: undefined,
+  maxRetries: 2,
+  // other params...
+});
+
+import { ChatOpenAI } from "@langchain/openai";
+import { GlobalDelayCallback } from "./rateLimitFallback";
+import { Response } from "express";
+import { keyof, z } from "zod";
+const delayCallback = new GlobalDelayCallback(500);
+// const llm = new ChatOpenAI({
+//   model: "gpt-5-mini-2025-08-07",
+//   temperature: 0.5,
+//   callbacks: [delayCallback],
 //   // other params...
 // });
 
-
-import { ChatOpenAI } from "@langchain/openai"
-
-const llm = new ChatOpenAI({
-  model: "gpt-5-mini-2025-08-07",
-  temperature: 0.5,
-  // other params...
-})
-
-export async function ChatAI({ userPrompt, tools }: { userPrompt: string; tools: DynamicStructuredTool[] }) {
+export async function ChatAI({
+  userPrompt,
+  tools,
+  res,
+}: {
+  userPrompt: string;
+  tools: DynamicStructuredTool[];
+  res: Response;
+}) {
   const agent = createAgent({
     model: llm,
     tools: tools,
     systemPrompt: SYSTEM_PROMPT,
   });
 
-  const aiMsg = await agent.invoke({
-    messages: [
-      {
-        role: "human",
-        content: `
-        Task:
+  const user = `
+    Task:
         given you a react project do the given task
-        Task : ${userPrompt}
-        `,
-      },
-    ],
-  });
-  console.log(aiMsg.messages);
-  return extractFinalAIMessage(aiMsg.messages);
-}
 
-function extractFinalAIMessage(messages: any[]) {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg._getType?.() === "ai" && msg.response_metadata?.finish_reason === "stop") {
-      return msg.content;
+        ensure rules are followed
+        Task : ${userPrompt}
+  `;
+
+  for await (const chunk of await agent.stream(
+    { messages: [{ role: "user", content: userPrompt }] },
+    { streamMode: "updates" }
+  )) {
+    // const entry = Object.values(chunk)[0];
+    // if (!entry) continue;
+
+    // if (entry.contentBlocks[0].text == "") continue;
+    // console.log(entry.contentBlocks[0].text);
+    // res.write(`data: ${JSON.stringify(entry.contentBlocks[0])}\n\n`);
+
+    const entry = Object.entries(chunk)[0];
+    if (!entry) continue;
+    const [step, content] = entry;
+
+    switch (step) {
+      case "tools":
+        console.log("==================================================");
+        console.log(content.messages[0]?.name);
+        console.log(content.messages[0]?.content);
+        const TOOLdata = {
+          type: "tools",
+          text: `using tool: ${content.messages[0]?.name}`
+        }
+        res.write(`data: ${JSON.stringify(TOOLdata)}\n\n`);
+      case "model_request":
+        console.log("==================================================");
+        console.log("message");
+        console.log(content.messages[0]?.content);
+        const MODELdata = {
+          type: "model_request",
+          text: content.messages[0]?.content,
+        };
+        res.write(`data: ${JSON.stringify(MODELdata)}\n\n`);
     }
   }
-  return "";
+
+  res.write(`event: end\ndata: END\n\n`);
+  res.end();
 }

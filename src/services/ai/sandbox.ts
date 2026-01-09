@@ -20,7 +20,7 @@ export async function createAISandbox(userId: string): Promise<string> {
   const sbx = await Sandbox.create("aetrix-sandbox-dev", {
     mcp: {
       filesystem: {
-        paths: ["/home/user/templates/react-starter"],
+        paths: ["/home/user/templates/react-starter/src"],
       },
     },
     timeoutMs: 3_600_000,
@@ -37,10 +37,10 @@ export async function createAISandbox(userId: string): Promise<string> {
   await sbx.commands.run("cd templates/react-starter && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
     background: true,
   });
-  console.log(await sbx.commands.run("pwd"));
-  console.log(await sbx.commands.run("ls"));
+
   logger.info("start code server");
   await NpmRunDev(sbx);
+
   logger.info(`$visit ${sbx.getHost(5173)}`);
   logger.info("started projects (dev)");
   return id;
@@ -95,7 +95,6 @@ export async function NpmRunDev(sbx: Sandbox) {
   const Startres = await sbx.commands.run("cd templates/react-starter && npx vite dev --port 5173", {
     background: true,
   });
-  logger.debug({ Startres }, "Started Vite dev server in sandbox");
   const Checkres = await sbx.commands.run(`
       until ss -tuln | grep -q ':5173'; do sleep 0.5; done
     `);
