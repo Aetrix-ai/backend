@@ -1,6 +1,6 @@
 import e, { Router } from "express";
 import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema";
-import { Config } from "../config";
+import { Config, prisma } from "../config";
 import logger from "../lib/logger";
 
 export const UserRouter: Router = Router();
@@ -29,7 +29,7 @@ UserRouter.get("/profile", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const user = await Config.PRISMA_CLIENT.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userID },
     });
     if (!user) {
@@ -63,7 +63,7 @@ UserRouter.put("/profile", async (req, res) => {
     }
   }
   try {
-    await Config.PRISMA_CLIENT.user.update({
+    await prisma.user.update({
       where: { id: userID },
       data,
     });
@@ -95,7 +95,7 @@ UserRouter.post("/profile/achievement", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const achievement = await Config.PRISMA_CLIENT.achievement.create({
+    const achievement = await prisma.achievement.create({
       data: {
         title: payload.data.title,
         description: payload.data.description,
@@ -120,7 +120,7 @@ UserRouter.get("/profile/achievement", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const achievements = await Config.PRISMA_CLIENT.achievement.findMany({
+    const achievements = await prisma.achievement.findMany({
       where: { userId: userID },
     });
 
@@ -146,7 +146,7 @@ UserRouter.delete("/profile/achievements/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    await Config.PRISMA_CLIENT.achievement.deleteMany({
+    await prisma.achievement.deleteMany({
       where: { id: achievementID, userId: userID },
     });
 
@@ -186,7 +186,7 @@ UserRouter.put("/profile/achievement/:id", async (req, res) => {
     }
   }
   try {
-    const find = await Config.PRISMA_CLIENT.achievement.findUnique({
+    const find = await prisma.achievement.findUnique({
       where: { id: achievementID, userId: userID },
     });
 
@@ -195,7 +195,7 @@ UserRouter.put("/profile/achievement/:id", async (req, res) => {
       return res.status(404).json({ message: "Achievement not found" });
     }
 
-    const result = await Config.PRISMA_CLIENT.achievement.update({
+    const result = await prisma.achievement.update({
       where: { id: achievementID, userId: userID },
       data,
     });
@@ -221,7 +221,7 @@ UserRouter.get("/profile/projects", async (req, res) => {
   //@ts-ignore
   const userId = req.user.id;
   try {
-    const projects = await Config.PRISMA_CLIENT.projects.findMany({
+    const projects = await prisma.projects.findMany({
       where: { userId: userId },
     });
 
@@ -248,7 +248,7 @@ UserRouter.post("/profile/project", async (req, res) => {
     return;
   }
   try {
-    const id = await Config.PRISMA_CLIENT.projects.create({
+    const id = await prisma.projects.create({
       data: {
         title: payload.data.title,
         description: payload.data.description,
@@ -279,7 +279,7 @@ UserRouter.get("/profile/project/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const project = await Config.PRISMA_CLIENT.projects.findUnique({
+    const project = await prisma.projects.findUnique({
       where: { id: projectID, userId: userID },
     });
 
@@ -308,7 +308,7 @@ UserRouter.delete("/profile/project/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const result = await Config.PRISMA_CLIENT.projects.deleteMany({
+    const result = await prisma.projects.deleteMany({
       where: { id: projectID, userId: userID },
     });
 
@@ -344,7 +344,7 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
     }
   }
   try {
-    const find = await Config.PRISMA_CLIENT.projects.findUnique({
+    const find = await prisma.projects.findUnique({
       where: { id: projectID, userId: userID },
     });
 
@@ -353,7 +353,7 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    const result = await Config.PRISMA_CLIENT.projects.update({
+    const result = await prisma.projects.update({
       where: { id: projectID, userId: userID },
       data,
     });
@@ -380,7 +380,7 @@ UserRouter.get("/profile/skills", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const skills = await Config.PRISMA_CLIENT.skill.findMany({
+    const skills = await prisma.skill.findMany({
       where: { userId: userID },
     });
 
@@ -407,7 +407,7 @@ UserRouter.post("/profile/skills", async (req, res) => {
     return;
   }
   try {
-    const id = await Config.PRISMA_CLIENT.skill.create({
+    const id = await prisma.skill.create({
       data: {
         name: payload.data.name,
         level: payload.data.level,
@@ -432,7 +432,7 @@ UserRouter.delete("/profile/skills/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const result = await Config.PRISMA_CLIENT.skill.deleteMany({
+    const result = await prisma.skill.deleteMany({
       where: { id: skillID, userId: userID },
     });
     logger.info(`Deleted skill id: ${skillID} for user id: ${userID}`);
@@ -467,7 +467,7 @@ UserRouter.put("/profile/skills/:id", async (req, res) => {
     }
   }
   try {
-    const find = await Config.PRISMA_CLIENT.skill.findUnique({
+    const find = await prisma.skill.findUnique({
       where: { id: skillID, userId: userID },
     });
 
@@ -476,7 +476,7 @@ UserRouter.put("/profile/skills/:id", async (req, res) => {
       return res.status(404).json({ message: "Skill not found" });
     }
 
-    const result = await Config.PRISMA_CLIENT.skill.update({
+    const result = await prisma.skill.update({
       where: { id: skillID, userId: userID },
       data,
     });

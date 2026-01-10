@@ -10,7 +10,7 @@ import { Router } from "express";
 export const adminRouter: Router = Router();
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { Config } from "../config";
+import { Config, prisma } from "../config";
 import logger from "../lib/logger";
 import jwt from "jsonwebtoken";
 export const adminSchema = z.object({
@@ -28,7 +28,7 @@ adminRouter.get("/signin", async (req, res) => {
     return res.status(400).send(isValid.error);
   }
   try {
-    const admin = await Config.PRISMA_CLIENT?.admin.findUnique({
+    const admin = await prisma.admin.findUnique({
       where: { email },
     });
     if (!admin) {
@@ -60,7 +60,7 @@ adminRouter.post("/create", async (req, res) => {
   // check if admin has a persmission to create admins
   try {
     // verify admin permissions
-    const admin = await Config.PRISMA_CLIENT?.admin.findUnique({
+    const admin = await prisma.admin.findUnique({
       where: { id },
     });
     if (!admin) {
@@ -71,7 +71,7 @@ adminRouter.post("/create", async (req, res) => {
     }
 
     //verify existing admin with same email
-    const existingAdmin = await Config.PRISMA_CLIENT?.admin.findUnique({
+    const existingAdmin = await prisma.admin.findUnique({
       where: { email: result.data.email },
     });
     if (existingAdmin) {
@@ -79,7 +79,7 @@ adminRouter.post("/create", async (req, res) => {
     }
     const hashedPassword = bcrypt.hashSync(result.data.password, Config.BCRYPT_SALT_ROUNDS);
     // create admin
-    const newAdmin = await Config.PRISMA_CLIENT?.admin.create({
+    const newAdmin = await prisma.admin.create({
       data: {
         email: result.data.email,
         password: hashedPassword,
@@ -102,7 +102,7 @@ adminRouter.post("/delete/:adminId", async (req, res) => {
 
   try {
     // verify requester admin permissions
-    const requesterAdmin = await Config.PRISMA_CLIENT?.admin.findUnique({
+    const requesterAdmin = await prisma.admin.findUnique({
       where: { id: requesterAdminId },
     });
     if (!requesterAdmin) {
@@ -112,7 +112,7 @@ adminRouter.post("/delete/:adminId", async (req, res) => {
       return res.status(403).send("Forbidden: You don't have permission to delete admins");
     }
     // delete admin
-    const deletedAdmin = await Config.PRISMA_CLIENT?.admin.delete({
+    const deletedAdmin = await prisma.admin.delete({
       where: { id: parseInt(adminId) },
     });
     if (!deletedAdmin) {

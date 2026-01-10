@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { Router } from "express";
 import { userSchema } from "../lib/schema";
 import logger from "../lib/logger";
-import { Config } from "../config";
+import { Config, prisma } from "../config";
 import jwt from "jsonwebtoken";
 
 export const authRouter = Router();
@@ -16,7 +16,7 @@ authRouter.post("/signup", async (req, res) => {
   }
   try {
     // check if email already exists
-    const existingUser = await Config.PRISMA_CLIENT.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email: payload.data.email },
     });
     if (existingUser) {
@@ -26,7 +26,7 @@ authRouter.post("/signup", async (req, res) => {
 
     //create new user
     const hashPassword = bcrypt.hashSync(payload.data.password, Config.BCRYPT_SALT_ROUNDS);
-    const newUser = await Config.PRISMA_CLIENT.user.create({
+    const newUser = await prisma.user.create({
       data: {
         email: payload.data.email,
         password: hashPassword,
@@ -54,7 +54,7 @@ authRouter.post("/signin", async (req, res) => {
   }
   try {
     // fetch user from db
-    const user = await Config.PRISMA_CLIENT.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: payload.data.email },
     });
 

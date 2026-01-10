@@ -8,7 +8,7 @@
     "dev": "tsc -b && node dist/index.js",
     "e2b:build:dev": "tsc -b &&  node dist/aetrix-react-sandbox/build.dev.js",
     "e2b:build:prod": "tsx aetrix-react-sandbox/build.prod.ts",
-    "e2b:kill":"tsc -b && node dist/kill.js"
+    "e2b:kill": "tsc -b && node dist/kill.js"
   },
   "repository": {
     "type": "git",
@@ -24,11 +24,7 @@
   "dependencies": {
     "@e2b/code-interpreter": "^2.3.3",
     "@imagekit/nodejs": "^7.1.1",
-    "@langchain/anthropic": "^1.0.0",
-    "@langchain/core": "^1.1.11",
-    "@langchain/google-genai": "^2.1.6",
     "@langchain/groq": "^1.0.2",
-    "@langchain/ollama": "^1.0.3",
     "@langchain/openai": "^1.2.1",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@prisma/client": "^6.17.1",
@@ -44,7 +40,7 @@
     "express": "^5.1.0",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
-    "langchain": "^1.0.1",
+    "langchain": "^1.2.7",
     "npm": "^11.7.0",
     "pino": "^10.0.0",
     "pino-http": "^11.0.0",
@@ -53,6 +49,5 @@
   },
   "devDependencies": {
     "prisma": "^6.17.1"
-
   }
 }
