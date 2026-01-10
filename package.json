@@ -53,5 +53,8 @@
   },
   "devDependencies": {
     "pino-pretty": "^13.1.2"
+  },
+  "overrides": {
+    "chalk": "4.1.2"
   }
 }
