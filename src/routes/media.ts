@@ -20,7 +20,7 @@ const ImagKitclient = new ImageKit({
 mediaRouter.get("/authenticate-upload", (req, res) => {
   try {
     //@ts-ignore
-    const user = req.user.id;
+    const user = "fix/me";
     const token = jwt.sign(
       {
         user: user,
