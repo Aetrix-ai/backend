@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b",
     "dev": "tsc -b && node dist/index.js",
     "e2b:build:dev": "tsc -b &&  node dist/aetrix-react-sandbox/build.dev.js",
     "e2b:build:prod": "tsx aetrix-react-sandbox/build.prod.ts",
@@ -44,10 +45,10 @@
     "npm": "^11.7.0",
     "pino": "^10.0.0",
     "pino-http": "^11.0.0",
-    "pino-pretty": "^13.1.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "prisma": "^6.17.1"
+    "prisma": "^6.17.1",
+    "pino-pretty": "^13.1.2"
   }
 }
