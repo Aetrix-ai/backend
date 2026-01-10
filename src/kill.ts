@@ -1,6 +1,6 @@
 import { Sandbox } from "e2b";
-import logger from "./lib/logger";
-import redis from "./services/redis/redis";
+import logger from "./lib/logger.js";
+import redis from "./services/redis/redis.js";
 
 export async function CleanUp() {
   try {

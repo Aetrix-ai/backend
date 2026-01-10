@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import logger from "./lib/logger";
+import logger from "./lib/logger.js";
 
 config();
 export const prisma = new PrismaClient();

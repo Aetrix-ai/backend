@@ -1,6 +1,6 @@
 import { Router } from "express";
 import ImageKit from "@imagekit/nodejs";
-import { Config } from "../config";
+import { Config } from "../config.js";
 export const mediaRouter: Router = Router();
 
 /**

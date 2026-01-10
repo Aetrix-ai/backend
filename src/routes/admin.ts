@@ -10,8 +10,8 @@ import { Router } from "express";
 export const adminRouter: Router = Router();
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { Config, prisma } from "../config";
-import logger from "../lib/logger";
+import { Config, prisma } from "../config.js";
+import logger from "../lib/logger.js";
 import jwt from "jsonwebtoken";
 export const adminSchema = z.object({
   id: z.string().uuid(),

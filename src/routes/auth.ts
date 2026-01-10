@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { Router } from "express";
-import { userSchema } from "../lib/schema";
-import logger from "../lib/logger";
-import { Config, prisma } from "../config";
+import { userSchema } from "../lib/schema.js";
+import logger from "../lib/logger.js";
+import { Config, prisma } from "../config.js";
 import jwt from "jsonwebtoken";
 
 export const authRouter = Router();

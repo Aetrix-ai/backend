@@ -171,7 +171,7 @@ const llm = new ChatGroq({
 });
 
 import { ChatOpenAI } from "@langchain/openai";
-import { GlobalDelayCallback } from "./rateLimitFallback";
+import { GlobalDelayCallback } from "./rateLimitFallback.js";
 import { Response } from "express";
 import { keyof, z } from "zod";
 const delayCallback = new GlobalDelayCallback(500);

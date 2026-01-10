@@ -1,7 +1,7 @@
 import e, { Router } from "express";
-import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema";
-import { Config, prisma } from "../config";
-import logger from "../lib/logger";
+import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema.js";
+import { Config, prisma } from "../config.js";
+import logger from "../lib/logger.js";
 
 export const UserRouter: Router = Router();
 

@@ -1,11 +1,11 @@
 // create a sandboxed AI service
 
 import { Sandbox } from "e2b";
-import { redis } from "../..";
+import { redis } from "../../index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import logger from "../../lib/logger";
-import { getTools } from "./tools";
+import logger from "../../lib/logger.js";
+import { getTools } from "./tools.js";
 
 //crete a sandboxed AI service , checks if a sandbox already exists for the user in redis with a ttl of 1 hour
 // store the id in redis with a ttl of 1 hour
@@ -85,7 +85,7 @@ export async function connectToSandbox(userId: string) {
   const tools = await getTools(client);
   logger.info(`MCP connection established to the sandbox - user:${userId} sandbox:${sbxid}`);
   logger.info("avialable tools");
-  tools.map((tool, i) => {
+  tools.map((tool: any, i:number) => {
     logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
   });
   return { sbx, client, tools };
