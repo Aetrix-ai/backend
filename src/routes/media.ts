@@ -8,7 +8,7 @@ export const mediaRouter: Router = Router();
  * provide media authorization token
  * for client to upload media to third-party services
  */
-
+export const runtime = "nodejs";
 const client = new ImageKit({
   privateKey: Config.IMAGEKIT_PRIVATE_KEY,
 });
