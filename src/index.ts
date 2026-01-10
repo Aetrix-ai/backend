@@ -19,6 +19,11 @@ app.post("/health", (req, res) => {
   res.status(402).send("OK");
 });
 
+app.post("/internal/cleanup", async (req, res) => {
+  await CleanUp();
+  res.send("done");
+});
+
 //handlers
 app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
@@ -27,16 +32,7 @@ app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
 app.use("/media", userAuthMiddleware, mediaRouter);
 
 
-async function StartServer() {
-  logger.info("Validating env")
-  ValidateConfig(Config)
-  if (process.env.FRESH_START == "true") {
-    await CleanUp();
-  }
-  app.listen(Config.PORT, () => {
-    logger.info(`Server is running on PORT: ${Config.PORT}`);
-  });
-}
+export default app
 
-StartServer()
+
 
