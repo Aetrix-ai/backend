@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import logger from "./lib/logger.js";
+import ImageKit from "@imagekit/nodejs";
 
 config();
 export const prisma = new PrismaClient();
@@ -76,7 +77,9 @@ function LoadConfig(): ConfigI {
 
 export const Config: ConfigI = LoadConfig()
 
-
+export const ImagKitclient = new ImageKit({
+  privateKey: Config.IMAGEKIT_PRIVATE_KEY,
+});
 export function ValidateConfig(Config: ConfigI) {
   const ConfigSchema = z.object({
     PORT: z.number().min(3000, "Min : 3000").max(8080, "Max : 8080"),

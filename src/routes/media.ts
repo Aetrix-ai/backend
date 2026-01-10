@@ -1,6 +1,6 @@
 import { Router } from "express";
 import ImageKit from "@imagekit/nodejs";
-import { Config } from "../config.js";
+import { Config, ImagKitclient } from "../config.js";
 import logger from "../lib/logger.js";
 import jwt from "jsonwebtoken";
 export const mediaRouter: Router = Router();
@@ -10,9 +10,7 @@ export const mediaRouter: Router = Router();
  * for client to upload media to third-party services
  */
 
-const client = new ImageKit({
-  privateKey: Config.IMAGEKIT_PRIVATE_KEY,
-});
+
 
 mediaRouter.get("/authenticate-upload", (req, res) => {
   try {
@@ -26,7 +24,7 @@ mediaRouter.get("/authenticate-upload", (req, res) => {
       Config.JWT.USER_JWT_SECRET
     );
 
-    const authenticationParameters = client.helper.getAuthenticationParameters(token);
+    const authenticationParameters = ImagKitclient.helper.getAuthenticationParameters(token);
     res.json(authenticationParameters);
   } catch (error) {
     console.log(error);
