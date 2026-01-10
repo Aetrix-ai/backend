@@ -89,17 +89,16 @@ export function ValidateConfig(Config: ConfigI) {
     IMAGEKIT_PRIVATE_KEY: z.string().min(10, "Provide a valid key"),
   });
   const parse = ConfigSchema.safeParse(Config);
-  if (Config.ENV == "development") {
-    logger.warn("[ENV] [DEVELOPMENT]");
-    if (parse.error) {
-      logger.warn({ error: parse.error }, "Env varibales");
-    }
-  }
 
   if (Config.ENV == "production") {
     logger.warn("[ENV] [PRODUCTION]");
     if (parse.error) {
       throw new Error(`Env Error ${parse.error}`);
+    }
+  }else {
+    logger.warn(`[ENV] [${Config.ENV}]`);
+    if (parse.error) {
+      logger.warn({ error: parse.error }, "Env varibales");
     }
   }
 }

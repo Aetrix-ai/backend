@@ -1,16 +1,16 @@
 import pino from "pino";
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || "debug",
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true, // Enable colors 🌈
-      translateTime: true, // Show readable time
-      levelFirst: true, // Show level (INFO, ERROR, etc.) first
-    },
-   // only log sta
-  },
-});
+const isLocal = process.env.NODE_ENV === "local";
+
+const logger = !isLocal
+  ? pino() // ✅ Vercel-safe
+  : pino({
+      transport: {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+        },
+      },
+    });
 
 export default logger;
