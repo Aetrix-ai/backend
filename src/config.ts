@@ -77,9 +77,7 @@ function LoadConfig(): ConfigI {
 
 export const Config: ConfigI = LoadConfig()
 
-export const ImagKitclient = new ImageKit({
-  privateKey: Config.IMAGEKIT_PRIVATE_KEY,
-});
+
 export function ValidateConfig(Config: ConfigI) {
   const ConfigSchema = z.object({
     PORT: z.number().min(3000, "Min : 3000").max(8080, "Max : 8080"),
