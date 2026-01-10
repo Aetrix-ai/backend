@@ -29,7 +29,7 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use("/user", userAuthMiddleware, UserRouter);
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
-app.use("/media", userAuthMiddleware, mediaRouter);
+app.use("/media", mediaRouter);
 
 
 export default app
