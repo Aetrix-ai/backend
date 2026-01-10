@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ImageKit from "@imagekit/nodejs";
 import { Config } from "../config.js";
+import logger from "../lib/logger.js";
 export const mediaRouter: Router = Router();
 
 /**
@@ -17,6 +18,7 @@ mediaRouter.get("/authenticate-upload", (req, res) => {
     const authenticationParameters = client.helper.getAuthenticationParameters();
     res.json(authenticationParameters);
   } catch (error) {
+    logger.error({error})
     res.status(500).json({ message: "Failed to get authorization parameters" });
   }
 });
