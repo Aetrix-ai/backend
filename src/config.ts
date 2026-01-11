@@ -26,6 +26,7 @@ interface ConfigI {
 
   BCRYPT_SALT_ROUNDS: number;
   IMAGEKIT_PRIVATE_KEY: string;
+  IMAGEKIT_URL_ENDPOINT: string;
 }
 
 //configuration object
@@ -50,6 +51,7 @@ function LoadConfig(): ConfigI {
 
       BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "5"),
       IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY!,
+      IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT!
     };
   }
 
@@ -72,6 +74,7 @@ function LoadConfig(): ConfigI {
 
     BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "5"),
     IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY || "",
+    IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT || ""
   };
 }
 

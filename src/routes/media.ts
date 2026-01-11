@@ -1,4 +1,3 @@
-export const runtime = 'nodejs'
 
 import { Router } from "express";
 import logger from "../lib/logger.js";
@@ -7,29 +6,23 @@ export const mediaRouter: Router = Router();
 import { z } from "zod";
 import ImageKit from "@imagekit/nodejs";
 import { Config } from "../config.js";
-/**
- * provide media authorization token
- * for client to upload media to third-party services
- */
+import { ImageKitClient } from "../services/imagekit/client.js";
 
-const ImagKitclient = new ImageKit({
-  privateKey: Config.IMAGEKIT_PRIVATE_KEY,
-});
-//deprectated does not support vecel works fine on local
-//it uses crypto (does not exist on vercel run time)
+/**
+ *  provide media authorization token
+ *  for client to upload media to third-party services
+
+  Note:
+ [ since vercel serverless functions dont crypto module the below route will not be available on vecel deployments
+  but will work on traditional nodejs deployments
+  for vercel deployments (dev) , another workaround service is provided ]
+ */
+// workound service : https://github.com/Aetrix-ai/services/tree/master/imagekit-auth with documentation
 mediaRouter.get("/authenticate-upload", (req, res) => {
   try {
     //@ts-ignore
-    const user = "fix/me";
-    const token = jwt.sign(
-      {
-        user: user,
-        type: "media",
-      },
-      Config.JWT.USER_JWT_SECRET
-    );
 
-    const authenticationParameters = ImagKitclient.helper.getAuthenticationParameters(token);
+    const authenticationParameters = ImageKitClient.helper.getAuthenticationParameters();
     res.json(authenticationParameters);
   } catch (error) {
     console.log(error);
@@ -38,45 +31,16 @@ mediaRouter.get("/authenticate-upload", (req, res) => {
   }
 });
 
-const uploadSchema = z.object({
-  uploadPayload: z.object({
-    fileName: z.string().min(2),
-    tags: z.array(z.string().min(1)),
-  }),
-  publicKey: z.string().min(10),
-});
-
-mediaRouter.post("/authenticate-upload", (req, res) => {
+mediaRouter.delete("/delete/:id", async (req, res) => {
   try {
-    const parse = uploadSchema.safeParse(req.body);
-    if (!parse.success) {
-      return res.status(400).json({
-        error: JSON.parse(parse.error.message),
-      });
+    if (!req.params.id) {
+      return res.status(400).json({ message: "File ID is required" });
     }
-
-    const token = jwt.sign(
-      {
-        //@ts-ignore
-        fileName:`${req.user.id}/${parse.data.uploadPayload.fileName}`,
-        tags: parse.data.uploadPayload.tags.join(","),
-        useUniqueFileName: true,
-      },
-      Config.IMAGEKIT_PRIVATE_KEY,
-      {
-        expiresIn: 3500,
-        header: {
-          alg: "HS256",
-          typ: "JWT",
-          kid: parse.data.publicKey,
-        },
-      }
-    );
-
-    res.json({ token });
+    await ImageKitClient.delete(req.params.id);
+    logger.info(`Deleted media file: ${req.params.id}`);
+    res.json({ message: "File deleted successfully" });
   } catch (error) {
-    console.log(error);
-    logger.error({ error });
-    res.status(500).json({ message: "Failed to get authorization parameters" });
+    logger.error({ error }, "Error deleting media file");
+    res.status(500).json({ message: "Failed to delete file" });
   }
-});
+})

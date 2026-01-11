@@ -6,9 +6,9 @@
     "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "NodeNext",
+    "module": "nodenext",
     "target": "ES2022",
-    "moduleResolution": "NodeNext",
+
     // "types": [],
     // For nodejs:
     "lib": [
@@ -17,9 +17,10 @@
     "types": [
       "node"
     ],
+    
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    
+
     // Other Outputs
     "sourceMap": true,
     "declaration": true,
