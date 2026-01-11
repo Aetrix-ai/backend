@@ -10,18 +10,58 @@ import { userAuthMiddleware } from "./middlewares/auth.js";
 import { mediaRouter } from "./routes/media.js";
 import { Redis } from "@upstash/redis";
 import { CleanUp } from "./kill.js";
+import jwt from "jsonwebtoken";
 export const redis = Redis.fromEnv();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/health", (req, res) => {
-  res.status(402).send("OK");
+app.get("/", (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>ImageKit Auth Service</title>
+        <style>
+          body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            font-size: 2em;
+          }
+        </style>
+      </head>
+      <body>
+        <div>API is alive</div>
+      </body>
+    </html>
+  `);
 });
 
-app.post("/internal/cleanup", async (req, res) => {
+app.get("/verify/secret/:type", async (req, res) => {
+  const { type } = req.params;
+  logger.info("generating JWT token for type: " + type);
+  let token: string;
+  if (type === "admin") {
+    token = jwt.sign({ role: "admin", timestamp: Date.now() }, Config.JWT.ADMIN_JWT_SECRET, { expiresIn: "1h" });
+  } else if (type === "user") {
+    token = jwt.sign({ role: "user", timestamp: Date.now() }, Config.JWT.USER_JWT_SECRET, { expiresIn: "1h" });
+  }
+  else {
+    return res.status(400).json({ message: "Invalid type" });
+  }
+  
+  res.json({ token });
+
+});
+
+app.get("/kill", async (req, res) => {
   await CleanUp();
-  res.send("done");
+  res.send("Cleaned up");
 });
 
 //handlers
@@ -31,8 +71,4 @@ app.use("/user", userAuthMiddleware, UserRouter);
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
 app.use("/media", mediaRouter);
 
-
-export default app
-
-
-
+export default app;
