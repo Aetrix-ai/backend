@@ -38,7 +38,8 @@ authRouter.post("/signup", async (req, res) => {
     logger.info(`User signed up with id: ${newUser.id} ${payload.data.email}`);
     return res.status(201).json({ id: newUser.id });
   } catch (error: any) {
-    logger.error({ message: error }, `Error creating user:`);
+    console.log(error);
+    logger.error({ ...error }, `Error creating user:`);
     return res.status(500).send("Internal Server Error");
   }
 });

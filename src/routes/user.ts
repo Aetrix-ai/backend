@@ -1,7 +1,10 @@
-import e, { Router } from "express";
+import { Router } from "express";
 import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema.js";
-import { Config, prisma } from "../config.js";
+import { prisma } from "../config.js";
 import logger from "../lib/logger.js";
+
+import { ImageKitClient } from "../services/imagekit/client.js";
+
 
 export const UserRouter: Router = Router();
 
@@ -101,7 +104,16 @@ UserRouter.post("/profile/achievement", async (req, res) => {
         description: payload.data.description,
         date: new Date(payload.data.date),
         userId: userID,
-        images: payload.data.images,
+        media: {
+          create: [
+            ...payload.data.media.map((media) => ({
+              fileId: media.fileId,
+              type: media.type,
+              url: media.url,
+              additional: media.additional,
+            })),
+          ],
+        },
       },
     });
 
@@ -122,6 +134,7 @@ UserRouter.get("/profile/achievement", async (req, res) => {
   try {
     const achievements = await prisma.achievement.findMany({
       where: { userId: userID },
+      include: { media: true },
     });
 
     logger.info(`Fetched achievements for user id: ${userID}`);
@@ -146,14 +159,16 @@ UserRouter.delete("/profile/achievements/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    await prisma.achievement.deleteMany({
+    const result = await prisma.achievement.delete({
       where: { id: achievementID, userId: userID },
+      include: { media: true },
     });
+    await ImageKitClient.files.bulk.delete({ fileIds: result?.media.map((media) => media.fileId) || [] });
 
     logger.info(`Deleted achievement id: ${achievementID} for user id: ${userID}`);
     return res.status(200).send("Achievement deleted");
   } catch (error: any) {
-    logger.error({ message: error }, `Error deleting achievement:`);
+    logger.error({ ...error }, `Error deleting achievement:`);
     return res.status(500).send("Internal Server Error");
   }
 });
@@ -174,34 +189,53 @@ UserRouter.put("/profile/achievement/:id", async (req, res) => {
   }
   //@ts-ignore
   const userID = req.user.id;
-  const data: Record<string, {}> = {};
-  for (const key in payload.data) {
-    const _key = key as keyof typeof payload.data;
-    if (payload.data[_key] !== undefined) {
-      if (_key === "date") {
-        data[_key] = new Date(payload.data[_key] as string);
-      } else {
-        data[_key as string] = payload.data[_key];
-      }
-    }
-  }
+
   try {
     const find = await prisma.achievement.findUnique({
       where: { id: achievementID, userId: userID },
+      include: { media: true },
     });
 
     if (!find) {
       logger.warn(`Achievement id: ${achievementID} for user id: ${userID} not found`);
-      return res.status(404).json({ message: "Achievement not found" });
+      return res.status(404).send("Achievement not found");
+    }
+    let achievement;
+    const newMedia = payload.data.media?.filter((media => !find.media.some(m => m.fileId === media.fileId)) ) || [];
+    const mediaToDelete = find.media.filter((media) => !payload.data.media?.some(m => m.fileId === media.fileId));
+
+    // Delete removed media from ImageKit
+    if (mediaToDelete.length > 0) {
+      await ImageKitClient.files.bulk.delete({ fileIds: mediaToDelete.map((media) => media.fileId) });
+
     }
 
-    const result = await prisma.achievement.update({
-      where: { id: achievementID, userId: userID },
-      data,
-    });
+    if (payload.data.title !== undefined || payload.data.description === undefined) {
+      achievement = await prisma.achievement.update({
+        where: { id: achievementID, userId: userID },
+        data: {
+          title: payload.data.title ? payload.data.title : find.title,
+          description: payload.data.description ? payload.data.description : find.description,
+          date: payload.data.date ? new Date(payload.data.date) : undefined,
+          media:{
+            create:
+              [...newMedia.map((media) => ({
+                fileId: media.fileId,
+                type: media.type,
+                url: media.url,
+                additional: media.additional,
+              }))],
+
+            deleteMany: [...mediaToDelete.map((media) => ({ id: media.id }))],
+          }
+        },
+      });
+    }
+    logger.info("updated achivement");
     logger.info(`Updated achievement id: ${achievementID} for user id: ${userID}`);
-    return res.status(200).json({ message: "Achievement updated successfully", achievement: result });
+    return res.status(200).json({ message: "Achievement updated successfully", achievement });
   } catch (error: any) {
+    console.log(error);
     logger.error({ message: error }, `Error updating achievement:`);
     return res.status(500).send("Internal Server Error");
   }
@@ -221,7 +255,7 @@ UserRouter.get("/profile/projects", async (req, res) => {
   //@ts-ignore
   const userId = req.user.id;
   try {
-    const projects = await prisma.projects.findMany({
+    const projects = await prisma.project.findMany({
       where: { userId: userId },
     });
 
@@ -248,15 +282,13 @@ UserRouter.post("/profile/project", async (req, res) => {
     return;
   }
   try {
-    const id = await prisma.projects.create({
+    const id = await prisma.project.create({
       data: {
         title: payload.data.title,
         description: payload.data.description,
         demoLink: payload.data.demoLink || "",
         repoLink: payload.data.repoLink || "",
         techStack: payload.data.techStack || [],
-        images: payload.data.images || [],
-        videos: payload.data.videos || [],
         additionalInfo: payload.data.additionalInfo || "",
         userId: userId,
       },
@@ -279,7 +311,7 @@ UserRouter.get("/profile/project/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const project = await prisma.projects.findUnique({
+    const project = await prisma.project.findUnique({
       where: { id: projectID, userId: userID },
     });
 
@@ -308,7 +340,7 @@ UserRouter.delete("/profile/project/:id", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    const result = await prisma.projects.deleteMany({
+    const result = await prisma.project.deleteMany({
       where: { id: projectID, userId: userID },
     });
 
@@ -344,7 +376,7 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
     }
   }
   try {
-    const find = await prisma.projects.findUnique({
+    const find = await prisma.project.findUnique({
       where: { id: projectID, userId: userID },
     });
 
@@ -353,7 +385,7 @@ UserRouter.put("/profile/project/:id", async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    const result = await prisma.projects.update({
+    const result = await prisma.project.update({
       where: { id: projectID, userId: userID },
       data,
     });
