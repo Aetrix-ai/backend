@@ -3,8 +3,9 @@ import { achievementSchema } from "../lib/schema";
 import logger from "../lib/logger";
 import { prisma } from "../config";
 import { ImageKitClient } from "../services/imagekit/client";
+import { Media } from "@prisma/client";
+import { makeTypedQueryFactory } from "@prisma/client/runtime/library";
 export const achievementRouter: Router = Router();
-
 
 /**
  * USER ACHIEVEMENT ROUTES
@@ -91,7 +92,7 @@ achievementRouter.delete("/:id", async (req, res) => {
       where: { id: achievementID, userId: userID },
       include: { media: true },
     });
-    await ImageKitClient.files.bulk.delete({ fileIds: result?.media.map((media) => media.fileId) || [] });
+    await ImageKitClient.deleteMany(result.media);
 
     logger.info(`Deleted achievement id: ${achievementID} for user id: ${userID}`);
     return res.status(200).send("Achievement deleted");
@@ -128,37 +129,18 @@ achievementRouter.put("/:id", async (req, res) => {
       logger.warn(`Achievement id: ${achievementID} for user id: ${userID} not found`);
       return res.status(404).send("Achievement not found");
     }
-    let achievement;
-    const newMedia = payload.data.media?.filter((media => !find.media.some(m => m.fileId === media.fileId)) ) || [];
-    const mediaToDelete = find.media.filter((media) => !payload.data.media?.some(m => m.fileId === media.fileId));
 
-    // Delete removed media from ImageKit
-    if (mediaToDelete.length > 0) {
-      await ImageKitClient.files.bulk.delete({ fileIds: mediaToDelete.map((media) => media.fileId) });
+    const {media} = await ImageKitClient.CompareAndDeleteMany(find.media, (payload.data.media as Media[]) || []);
 
-    }
-
-    if (payload.data.title !== undefined || payload.data.description === undefined) {
-      achievement = await prisma.achievement.update({
-        where: { id: achievementID, userId: userID },
-        data: {
-          title: payload.data.title ? payload.data.title : find.title,
-          description: payload.data.description ? payload.data.description : find.description,
-          date: payload.data.date ? new Date(payload.data.date) : undefined,
-          media:{
-            create:
-              [...newMedia.map((media) => ({
-                fileId: media.fileId,
-                type: media.type,
-                url: media.url,
-                additional: media.additional,
-              }))],
-
-            deleteMany: [...mediaToDelete.map((media) => ({ id: media.id }))],
-          }
-        },
-      });
-    }
+    const achievement = await prisma.achievement.update({
+      where: { id: achievementID, userId: userID },
+      data: {
+        title: payload.data.title ? payload.data.title : find.title,
+        description: payload.data.description ? payload.data.description : find.description,
+        date: payload.data.date ? new Date(payload.data.date) : undefined,
+        media: media,
+      },
+    });
     logger.info("updated achivement");
     logger.info(`Updated achievement id: ${achievementID} for user id: ${userID}`);
     return res.status(200).json({ message: "Achievement updated successfully", achievement });

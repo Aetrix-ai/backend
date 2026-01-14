@@ -29,18 +29,18 @@ export const userSchema = z.object({
 
 export const MediaSchema = z.object({
   fileId: z.string().min(6, "invalid file id"),
-  type: z.enum(["IMAGE" , "VIDEO"]),
+  type: z.enum(["IMAGE", "VIDEO"]),
   url: z.url(),
-  additional:z.string().min(6 , "Invalid format min 6 char len").optional()
+  additional: z.string().min(6, "Invalid format min 6 char len").optional(),
 });
 
+export type MediaI = z.infer<typeof MediaSchema>;
 export const achievementSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(1000),
   date: z.string(), // ISO date string
   media: z.array(MediaSchema),
 });
-
 
 export const aiRouterSchema = z.object({
   prompt: z.string().min(1).max(5000),
@@ -52,8 +52,7 @@ export const projectSchema = z.object({
   demoLink: z.string().url().optional(),
   repoLink: z.string().url().optional(),
   techStack: z.array(z.string()).optional(),
-  images: z.array(z.string().url()).optional(),
-  videos: z.array(z.string().url()).optional(),
+  media: z.array(MediaSchema),
   additionalInfo: z.string().max(1000).optional(),
 });
 
