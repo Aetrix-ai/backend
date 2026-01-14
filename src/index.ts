@@ -10,6 +10,7 @@ import { mediaRouter } from "./routes/media.js";
 import { Redis } from "@upstash/redis";
 import { CleanUp } from "./kill.js";
 import jwt from "jsonwebtoken";
+import { achievementRouter } from "./routes/achievment.js";
 export const redis = Redis.fromEnv();
 const app = express();
 app.use(cors());
@@ -66,7 +67,10 @@ app.get("/kill", async (req, res) => {
 //handlers
 app.use("/auth", authRouter);
 app.use("/user", userAuthMiddleware, UserRouter);
+app.use("/user/achievement", userAuthMiddleware, achievementRouter);
+
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
 app.use("/media", mediaRouter);
+
 
 export default app;
