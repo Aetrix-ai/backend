@@ -1,3 +1,4 @@
+import { ca } from "zod/v4/locales";
 import { Config, ValidateConfig } from "./config.js";
 import app from "./index.js";
 import { CleanUp } from "./kill.js";

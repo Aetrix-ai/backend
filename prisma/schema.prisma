@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,30 +8,35 @@ datasource db {
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
-  email          String           @unique
-  name           String
-  password       String
-  role           String           @default("STUDENT")
-  bio            String?
-  avatar         String?
-  github         String?
-  linkedin       String?
-  twitter        String?
-  resume         String?
-  achievements   Achievement[]
-  skills         Skill[]
-  projects       Projects[]
-  events         Event[]
-  AetrixProjects AetrixProjects[]
+  id              Int               @id @default(autoincrement())
+  email           String            @unique
+  name            String
+  password        String
+  role            String            @default("STUDENT")
+  bio             String?
+
+  avatarId        Int?              @unique
+  avatar          Media?            @relation("UserAvatar", fields: [avatarId], references: [id])
+
+  github          String?
+  linkedin        String?
+  twitter         String?
+  resume          String?
+
+  achievements    Achievement[]
+  skills          Skill[]
+  projects        Project[]
+  aetrixProjects  AetrixProject[]
+  media           Media[]
 }
 
 model Skill {
   id     Int    @id @default(autoincrement())
   name   String
   level  String
+
   userId Int
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Achievement {
@@ -44,66 +44,60 @@ model Achievement {
   title       String
   description String
   date        DateTime
+
   userId      Int
-  images      String[] // add any images
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  media       Media[]
 }
 
-model Projects {
+model Project {
   id             Int      @id @default(autoincrement())
   title          String
   description    String
   demoLink       String?
   repoLink       String?
   techStack      String[]
-  images         String[] // add any images
-  videos         String[] // add any videos
   additionalInfo String?
-  sandbox        String? // should be removed
+
   userId         Int
-  owner          User     @relation(fields: [userId], references: [id])
+  owner          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  media          Media[]
 }
 
-model Event {
-  id             Int      @id @default(autoincrement())
-  title          String
-  description    String
-  reg_url        String?
-  eventDate      DateTime
-  location       String
-  poster         String?
-  coverImage     String?
-  additionalInfo String?
-  userId         Int
-  organizer      User     @relation(fields: [userId], references: [id])
-}
-
-model admin {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-
-  /**
-   * permissions is used to determine what actions an admin can perform
-   */
-  PERMISSIONS String[]
-
-  /**
-   * ranks is used to determine the level of admin , a ensure a admin with higher
-   * rank can manage admin with lower rank
-   */
-  rank Int
-}
-
-// projects created by Aetrix ai (User Portfolio generation)
-model AetrixProjects {
+model AetrixProject {
   id          Int     @id @default(autoincrement())
-  type        String // portfolio or event
+  type        String  // portfolio | event
   title       String
   description String?
   repoLink    String?
-  sandbox     String? // should be removed
   deployLink  String?
-  user        User?   @relation(fields: [userId], references: [id])
+
   userId      Int?
+  user        User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Media {
+  id             Int          @id @default(autoincrement())
+  type           MediaType
+  fileId         String
+  url            String
+  additional     String?
+
+  userId         Int?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId      Int?
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  achievementId  Int?
+  achievement    Achievement? @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  avatarUser     User?        @relation("UserAvatar")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
 }
