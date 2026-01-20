@@ -163,7 +163,7 @@ console.log("Hello World")
 `;
 
 const llm = new ChatGroq({
-  model: "openai/gpt-oss-20b",
+  model: "openai/gpt-oss-120b",
   temperature: 0,
   maxTokens: undefined,
   maxRetries: 2,

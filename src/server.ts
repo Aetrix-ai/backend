@@ -10,7 +10,7 @@ async function StartServer() {
   if (process.env.FRESH_START == "true") {
     await CleanUp();
   }
-  app.listen(Config.PORT, () => {
+  app.listen(Config.PORT,"0.0.0.0" ,() => {
     logger.info(`Server is running on PORT: ${Config.PORT}`);
   });
 }

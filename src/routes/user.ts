@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { achievementSchema, projectSchema, skillSchema, userSchema, userUpdateSchema } from "../lib/schema.js";
+import { achievementSchema, MediaI, projectSchema, skillSchema, userSchema } from "../lib/schema.js";
 import { prisma } from "../config.js";
 import logger from "../lib/logger.js";
 
 import { ImageKitClient } from "../services/imagekit/client.js";
-
 
 export const UserRouter: Router = Router();
 
@@ -28,12 +27,15 @@ export const UserRouter: Router = Router();
 /**
  * Get User Profile
  */
-UserRouter.get("/profile", async (req, res) => {
+UserRouter.get("/", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
     const user = await prisma.user.findUnique({
       where: { id: userID },
+      include: {
+        avatar: true,
+      },
     });
     if (!user) {
       return res.status(404).send("User not found");
@@ -49,38 +51,65 @@ UserRouter.get("/profile", async (req, res) => {
 /**
  * Update User Profile
  */
-UserRouter.put("/profile", async (req, res) => {
+UserRouter.put("/", async (req, res) => {
   console.log("Update profile request received:", req.body);
-  const payload = userUpdateSchema.safeParse(req.body);
+  const payload = userSchema.partial().safeParse(req.body);
   if (!payload.success) {
     logger.warn({ message: JSON.parse(payload.error.message) }, `Invalid user profile update payload`);
     return res.status(400).json({ error: JSON.parse(payload.error.message) });
   }
-  //@ts-ignore
-  const userID = req.user.id;
-  const data: Record<string, {}> = {};
-  for (const key in payload.data) {
-    const _key = key as keyof typeof payload.data;
-    if (payload.data[_key] !== undefined) {
-      data[_key as string] = payload.data[_key];
-    }
-  }
   try {
-    await prisma.user.update({
-      where: { id: userID },
-      data,
+    //@ts-ignore
+    const userID = req.user.id;
+    const user = await prisma.user.findUnique({
+      where: {
+        //@ts-ignore
+        id: userID,
+      },
+      include: {
+        avatar: true,
+      },
     });
-    logger.info(`Updated profile for user id: ${userID}`);
-    return res.status(200).send("User Profile Updated");
-  } catch (error: any) {
-    logger.error({ message: error }, `Error updating user profile:`);
+    let media = user?.avatar;
+    // 1. Update or create avatar
+    if (payload.data.avatar) {
+      if (user?.avatarId) {
+        await prisma.media.update({
+          where: { id: user.avatarId },
+          data: payload.data.avatar,
+        });
+      } else {
+        const media = await prisma.media.create({
+          data: payload.data.avatar,
+        });
+
+        await prisma.user.update({
+          where: { id: userID },
+          data: { avatarId: media.id },
+        });
+      }
+    }
+
+    // 2. Update user profile fields (always)
+    const updatedUser = await prisma.user.update({
+      where: { id: userID },
+      data: {
+        name: payload.data.name,
+        bio: payload.data.bio,
+        github: payload.data.github,
+        linkedin: payload.data.linkedin,
+        twitter: payload.data.twitter,
+        resume: payload.data.resume,
+      },
+      include: { avatar: true },
+    });
+
+    return res.status(200).json(updatedUser);
+  } catch (e) {
+    logger.error({ message: e }, `Error updating user profile:`);
     return res.status(500).send("Internal Server Error");
   }
 });
-
-
-
-
 /**
  * USER SKILLS ROUTES
   - Add Skill

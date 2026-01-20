@@ -17,7 +17,7 @@
     "types": [
       "node"
     ],
-    
+
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
