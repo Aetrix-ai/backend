@@ -9,7 +9,6 @@ import { prisma } from "../config";
 
 
 
-
 export const publicRouter = Router()
 
 publicRouter.get("/profile/:id", async (req, res) => {
