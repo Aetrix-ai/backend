@@ -12,6 +12,7 @@ import { CleanUp } from "./kill.js";
 import jwt from "jsonwebtoken";
 import { achievementRouter } from "./routes/achievment.js";
 import { projectRouter } from "./routes/project.js";
+import { publicRouter } from "./routes/public.js";
 export const redis = Redis.fromEnv();
 const app = express();
 app.use(cors());
@@ -75,5 +76,5 @@ app.use("/user/project", userAuthMiddleware, projectRouter);
 app.use("/ai", userAuthMiddleware, AiRouter); // TODO: separate ai router
 app.use("/media", mediaRouter);
 
-
+app.use("/public" , publicRouter)
 export default app;

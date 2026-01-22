@@ -16,7 +16,7 @@ authRouter.post("/signup", async (req, res) => {
   }
   try {
     // check if email already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { email: payload.data.email },
     });
     if (existingUser) {
