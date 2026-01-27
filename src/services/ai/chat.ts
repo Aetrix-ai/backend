@@ -162,13 +162,25 @@ console.log("Hello World")
 
 `;
 
-const llm = new ChatGroq({
-  model: "openai/gpt-oss-120b",
-  temperature: 0,
-  maxTokens: undefined,
-  maxRetries: 2,
-  // other params...
-});
+// const llm = new ChatGroq({
+//   model: "openai/gpt-oss-120b",
+//   temperature: 0,
+//   maxTokens: undefined,
+//   maxRetries: 2,
+//   // other params...
+// });
+
+
+import { ChatOllama } from "@langchain/ollama"
+
+const llm = new ChatOllama({
+    model: "qwen3-coder:30b",
+    temperature: 0,
+    maxRetries: 2,
+
+    // other params...
+})
+
 
 import { ChatOpenAI } from "@langchain/openai";
 import { GlobalDelayCallback } from "./rateLimitFallback.js";
