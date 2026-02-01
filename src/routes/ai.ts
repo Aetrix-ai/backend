@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { aiRouterSchema } from "../lib/schema.js";
 
-import { connectToSandbox, createAISandbox, killSandbox, NpmRunDev } from "../services/ai/sandbox.js";
+import { connectToSandboxWithMcp, createAISandbox, killSandbox, NpmRunDev } from "../services/ai/sandbox.js";
 import logger from "../lib/logger.js";
 import { ChatAI } from "../services/ai/chat.js";
 export const AiRouter: Router = Router();
@@ -23,7 +23,7 @@ AiRouter.post("/chat", async (req, res) => {
 
     //@ts-ignore
     const userID = req.user.id;
-    const Box = await connectToSandbox(userID);
+    const Box = await connectToSandboxWithMcp(userID);
     await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools, res });
     await NpmRunDev(Box!.sbx);
   } catch (err) {

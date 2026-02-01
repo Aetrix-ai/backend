@@ -31,7 +31,6 @@ console.log("Hello World")
 
 `;
 
-import { ChatGroq } from "@langchain/groq";
 export const SYSTEM_PROMPT = `
 
 You are a sandboxed AI agent operating inside an isolated development environment.
@@ -175,24 +174,15 @@ import { ChatOllama } from "@langchain/ollama"
 
 const llm = new ChatOllama({
     model: "qwen3-coder:30b",
-    temperature: 0,
+    temperature: 0.8,
     maxRetries: 2,
 
     // other params...
 })
 
 
-import { ChatOpenAI } from "@langchain/openai";
-import { GlobalDelayCallback } from "./rateLimitFallback.js";
 import { Response } from "express";
-import { keyof, z } from "zod";
-const delayCallback = new GlobalDelayCallback(500);
-// const llm = new ChatOpenAI({
-//   model: "gpt-5-mini-2025-08-07",
-//   temperature: 0.5,
-//   callbacks: [delayCallback],
-//   // other params...
-// });
+
 
 export async function ChatAI({
   userPrompt,

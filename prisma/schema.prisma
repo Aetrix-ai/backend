@@ -22,7 +22,7 @@ model User {
   linkedin String?
   twitter  String?
   resume   String?
-
+  
   achievements   Achievement[]
   skills         Skill[]
   projects       Project[]
