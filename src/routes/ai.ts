@@ -39,6 +39,7 @@ AiRouter.post("/chat", async (req, res) => {
 AiRouter.get("/sandbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
+  logger.info("Creating sandbox")
   const sbxId = await createAISandbox(userID);
   res.json({
     sandbox: sbxId,

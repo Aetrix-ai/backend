@@ -17,15 +17,17 @@ export async function createAISandbox(userId: string): Promise<string> {
     return sbxId as string
   }
 
-  const sbx = await Sandbox.create("aetrix-sandbox-dev", {
+  const sbx = await Sandbox.create("aetrix-dev-portfolio", {
     mcp: {
       filesystem: {
-        paths: ["/home/user/templates/react-starter/src"],
+        paths: ["/home/user/e2b_scripts/portfolio-starter"],
       },
     },
 
     envs: {
-      GIT_TOKEN: process.env.GIT_TOKEN!
+      GIT_TOKEN: process.env.GIT_TOKEN!,
+      NEXT_PUBLIC_BACKEND_API_URL:"http://localhost:4000/public",
+      NEXT_PUBLIC_USER_ID:String(userId)
     },
 
     timeoutMs: 3_600_000,
@@ -39,14 +41,15 @@ export async function createAISandbox(userId: string): Promise<string> {
     ex: 3600, // Set TTL to 1 hour (3600 seconds)
   });
 
-  await sbx.commands.run("cd templates/react-starter && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
+  await sbx.commands.run("cd e2b_scripts/portfolio-starter  && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
     background: true,
   });
 
-  logger.info("start code server");
+  logger.info("started code server");
   await NpmRunDev(sbx);
 
-  logger.info(`$visit ${sbx.getHost(5173)}`);
+
+  logger.info(`$visit ${sbx.getHost(3000)}`);
   logger.info("started projects (dev)");
   return id;
 }
@@ -118,14 +121,13 @@ export async function connectToSandboxWithMcp(userId: string) {
 
 
 export async function NpmRunDev(sbx: Sandbox) {
-  const Startres = await sbx.commands.run("cd templates/react-starter && npx vite dev --port 5173", {
+  const Startres = await sbx.commands.run("cd e2b_scripts/portfolio-starter && npm run dev", {
     background: true,
   });
   const Checkres = await sbx.commands.run(`
-      until ss -tuln | grep -q ':5173'; do sleep 0.5; done
+      until ss -tuln | grep -q ':3000'; do sleep 0.5; done
     `);
-  logger.debug({ Checkres }, "Started Vite dev server in sandbox");
-  logger.info("Restarting react server");
+  logger.debug({ Checkres }, "Started next dev server in sandbox");
 }
 
 
