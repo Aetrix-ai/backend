@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { Github } from "../services/git/github";
-import { connectToSandbox } from "../services/ai/sandbox";
+import { Github } from "../services/git/github.js";
+import { connectToSandbox } from "../services/ai/sandbox.js";
 import z from "zod";
 
 export const GitRouter = Router()

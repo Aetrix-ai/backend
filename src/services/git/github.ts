@@ -1,7 +1,7 @@
 
 import { Sandbox } from "e2b";
 import { Octokit, } from "octokit"
-import logger from "../../lib/logger";
+import logger from "../../lib/logger.js";
 
 interface CreateRepoReq {
     name: string,
