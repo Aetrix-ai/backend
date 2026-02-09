@@ -10,124 +10,167 @@ import { getTools } from "./tools.js";
 //crete a sandboxed AI service , checks if a sandbox already exists for the user in redis with a ttl of 1 hour
 // store the id in redis with a ttl of 1 hour
 
-export async function createAISandbox(userId: string): Promise<string> {
-  const sbxId = await redis.get(userId);
-  if (sbxId) {
-    logger.warn(`Sandbox already exists for user: ${userId} id: ${sbxId}`);
-    return sbxId as string
+
+
+
+
+type templates = "portfolio" | "next-playground" | "zero" | "event"
+
+class SanBox {
+
+  private Templates: Map<templates, string>
+
+  constructor(templates: Map<templates, string>) {
+    this.Templates = templates
   }
 
-  const sbx = await Sandbox.create("aetrix-dev-portfolio", {
-    mcp: {
-      filesystem: {
-        paths: ["/home/user/e2b_scripts/portfolio-starter"],
+  /**
+   * creates a sandbox with specified type and return id 
+   *  - portfolio :  portfolio started templates
+   *  - next-playground : next js starter 
+   *  - zero : git clonable enviroment
+   *  - event : event started templates
+   * @param userID 
+   * @param type 
+   * @returns 
+   */
+  async buildTemplateSandbox(userID: string, type: templates): Promise<string | Error> {
+    const template = this.Templates.get(type)
+
+    if (!template) {
+      return new Error("Invalid type")
+    }
+
+    const id = await this.createAISandbox(userID, template)
+
+    return id
+  }
+
+  /**
+   * clone a project to a 'zero' env and starts it
+
+   * 
+   * @param gitUrl 
+   * @param sbx 
+   */
+  async buildCloneSandbox(gitUrl: string, sbx: Sandbox, commands: string[]) {
+    const repoName = gitUrl.split("/").pop()?.replace(".git", "")
+
+    if (!repoName) throw new Error("invalid git url")
+    await sbx.commands.run(
+      `git clone ${gitUrl}`,
+      { timeoutMs: 120_000 }
+    )
+
+    for (const cmd of commands) {
+      await sbx.commands.run(
+        `cd ${repoName} && ${cmd}`,
+        { timeoutMs: 300_000 }
+      )
+    }
+  }
+
+  private async createAISandbox(userId: string, template: string): Promise<string> {
+    const sbxId = await redis.get(userId);
+    if (sbxId) {
+      logger.warn(`Sandbox already exists for user: ${userId} id: ${sbxId}`);
+      return sbxId as string
+    }
+
+    const sbx = await Sandbox.create(template, {
+      mcp: {
+        filesystem: {
+          paths: ["/home/user/e2b_scripts/portfolio-starter"],
+        },
       },
-    },
 
-    envs: {
-      GIT_TOKEN: process.env.GIT_TOKEN!,
-      NEXT_PUBLIC_BACKEND_API_URL:"http://localhost:4000/public",
-      NEXT_PUBLIC_USER_ID:String(userId)
-    },
-
-    timeoutMs: 3_600_000,
-  });
-
-  const id = (await sbx.getInfo()).sandboxId;
-
-  logger.info("sandbox created with id: " + id);
-
-  const result = await redis.set(userId, id, {
-    ex: 3600, // Set TTL to 1 hour (3600 seconds)
-  });
-
-  await sbx.commands.run("cd e2b_scripts/portfolio-starter  && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
-    background: true,
-  });
-
-  logger.info("started code server");
-  await NpmRunDev(sbx);
-
-
-  logger.info(`$visit ${sbx.getHost(3000)}`);
-  logger.info("started projects (dev)");
-  return id;
-}
-
-
-
-
-
-export async function killSandbox(userId: string) {
-  const sbxId = await redis.get(userId);
-  if (!sbxId) {
-    logger.info("No sandbox found for user: " + userId);
-    return;
-  }
-
-  const sbx = await Sandbox.connect(sbxId as string);
-  await sbx.kill();
-  await redis.del(userId);
-  logger.info("Sandbox killed for user: " + userId);
-}
-
-
-
-
-
-export async function connectToSandbox(userId: string): Promise<Sandbox | undefined> {
-  const sbxid = await redis.get(userId);
-  if (!sbxid) {
-    logger.info("sandbox not exist for user: " + userId);
-    return
-  }
-  const sbx = await Sandbox.connect(sbxid as string);
-  return sbx
-}
-
-
-
-
-
-export async function connectToSandboxWithMcp(userId: string) {
-  const sbx = await connectToSandbox(userId)
-
-  const client = new Client({
-    name: "e2b-mcp-client",
-    version: "1.0.0",
-  });
-
-  if (!sbx) throw new Error("sbx connetion failure")
-
-  const transport = new StreamableHTTPClientTransport(new URL(sbx.getMcpUrl()), {
-    requestInit: {
-      headers: {
-        Authorization: `Bearer ${await sbx.getMcpToken()}`,
+      envs: {
+        GIT_TOKEN: process.env.GIT_TOKEN!,
+        NEXT_PUBLIC_BACKEND_API_URL: "http://localhost:4000/public",
+        NEXT_PUBLIC_USER_ID: String(userId)
       },
-    },
-  });
-  await client.connect(transport);
-  const tools = await getTools(client);
-  ;
-  logger.info("avialable tools");
-  tools.map((tool: any, i: number) => {
-    logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
-  });
-  return { sbx, client, tools };
-}
+
+      timeoutMs: 3_600_000,
+    });
+
+    const id = (await sbx.getInfo()).sandboxId;
+    const result = await redis.set(userId, id, {
+      ex: 3600, // Set TTL to 1 hour (3600 seconds)
+    });
+    logger.info("sandbox created with id: " + id);
 
 
+    await sbx.commands.run("cd e2b_scripts/portfolio-starter  && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
+      background: true,
+    });
+    await this.NpmRunDev(sbx);
+
+    logger.info("sandbox created with id: " + id);
+    logger.info(`$visit ${sbx.getHost(3000)}`);
+    logger.info("started projects (dev)");
+    return id;
+  }
 
 
-
-export async function NpmRunDev(sbx: Sandbox) {
-  const Startres = await sbx.commands.run("cd e2b_scripts/portfolio-starter && npm run dev", {
-    background: true,
-  });
-  const Checkres = await sbx.commands.run(`
+  async NpmRunDev(sbx: Sandbox) {
+    const Startres = await sbx.commands.run("cd e2b_scripts/portfolio-starter && npm run dev", {
+      background: true,
+    });
+    const Checkres = await sbx.commands.run(`
       until ss -tuln | grep -q ':3000'; do sleep 0.5; done
     `);
-  logger.debug({ Checkres }, "Started next dev server in sandbox");
+    logger.debug({ Checkres }, "Started next dev server in sandbox");
+  }
+
+  async connectToSandboxWithMcp(userId: string) {
+    const sbx = await this.connectToSandbox(userId)
+    const client = new Client({
+      name: "e2b-mcp-client",
+      version: "1.0.0",
+    });
+
+    if (!sbx) throw new Error("sbx connetion failure")
+
+    const transport = new StreamableHTTPClientTransport(new URL(sbx.getMcpUrl()), {
+      requestInit: {
+        headers: {
+          Authorization: `Bearer ${await sbx.getMcpToken()}`,
+        },
+      },
+    });
+    await client.connect(transport);
+    const tools = await getTools(client);
+    logger.info("avialable tools");
+    tools.map((tool: any, i: number) => {
+      logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
+    });
+    return { sbx, client, tools };
+  }
+
+  async connectToSandbox(userId: string): Promise<Sandbox | undefined> {
+    const sbxid = await redis.get(userId);
+    if (!sbxid) {
+      logger.info("sandbox not exist for user: " + userId);
+      return
+    }
+    const sbx = await Sandbox.connect(sbxid as string);
+    return sbx
+  }
+
+
+  async killSandbox(userId: string) {
+    const sbx = await this.connectToSandbox(userId)
+    if (!sbx) return
+    await sbx.kill();
+    await redis.del(userId);
+    logger.info("Sandbox killed for user: " + userId);
+  }
 }
 
+export function sandbox() {
 
+  const Templates: Map<templates, string> = new Map()
+  Templates.set("portfolio", "aetrix-dev-portfolio")
+  Templates.set("zero", "aetrix-dev-zero")
+  return new SanBox(Templates)
+}

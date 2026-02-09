@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { aiRouterSchema } from "../lib/schema.js";
 
-import { connectToSandboxWithMcp, createAISandbox, killSandbox, NpmRunDev } from "../services/ai/sandbox.js";
 import logger from "../lib/logger.js";
 import { ChatAI } from "../services/ai/chat.js";
+import { sandbox } from "../services/ai/sandbox.js";
 export const AiRouter: Router = Router();
 
+
+const SanBox = sandbox()
 AiRouter.post("/chat", async (req, res) => {
   res.status(200);
   res.setHeader("Content-Type", "text/event-stream");
@@ -23,9 +25,9 @@ AiRouter.post("/chat", async (req, res) => {
 
     //@ts-ignore
     const userID = req.user.id;
-    const Box = await connectToSandboxWithMcp(userID);
+    const Box = await SanBox.connectToSandboxWithMcp(userID);
     await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools, res });
-    await NpmRunDev(Box!.sbx);
+    await SanBox.NpmRunDev(Box!.sbx);
   } catch (err) {
     logger.error(err);
     if (!res.headersSent) {
@@ -40,7 +42,7 @@ AiRouter.get("/sandbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   logger.info("Creating sandbox")
-  const sbxId = await createAISandbox(userID);
+  const sbxId = SanBox.buildTemplateSandbox(userID, "portfolio")
   res.json({
     sandbox: sbxId,
   });
@@ -50,7 +52,7 @@ AiRouter.delete("/sanbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   try {
-    await killSandbox(userID);
+    await SanBox.killSandbox(userID);
     res.json({
       msg: "Sandbox deleted successfully",
     });
