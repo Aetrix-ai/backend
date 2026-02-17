@@ -7,13 +7,6 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import logger from "../../lib/logger.js";
 import { getTools } from "./tools.js";
 
-//crete a sandboxed AI service , checks if a sandbox already exists for the user in redis with a ttl of 1 hour
-// store the id in redis with a ttl of 1 hour
-
-
-
-
-
 type templates = "portfolio" | "next-playground" | "zero" | "event"
 
 class SanBox {
@@ -69,7 +62,12 @@ class SanBox {
       )
     }
   }
-
+/**
+ * create an AI sandbox with a specified template, if the sandbox already exists it returns the existing one
+ * @param userId 
+ * @param template 
+ * @returns 
+ */
   private async createAISandbox(userId: string, template: string): Promise<string> {
     const sbxId = await redis.get(userId);
     if (sbxId) {
@@ -80,30 +78,37 @@ class SanBox {
     const sbx = await Sandbox.create(template, {
       mcp: {
         filesystem: {
-          paths: ["/home/user/e2b_scripts/portfolio-starter"],
+          paths: ["/home/user/e2b_scripts/portfolio-starter"]
         },
       },
-
+      
       envs: {
         GIT_TOKEN: process.env.GIT_TOKEN!,
-        NEXT_PUBLIC_BACKEND_API_URL: "http://localhost:4000/public",
-        NEXT_PUBLIC_USER_ID: String(userId)
+        NEXT_PUBLIC_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
+        NEXT_PUBLIC_USER_ID: "2" //TODO: change rhus to String(userId)
       },
 
       timeoutMs: 3_600_000,
     });
-
+   
     const id = (await sbx.getInfo()).sandboxId;
     const result = await redis.set(userId, id, {
       ex: 3600, // Set TTL to 1 hour (3600 seconds)
     });
     logger.info("sandbox created with id: " + id);
 
-
-    await sbx.commands.run("cd e2b_scripts/portfolio-starter  && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
-      background: true,
-    });
+  
+    // await sbx.commands.run("code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
+    //   background: true,
+    // });
     await this.NpmRunDev(sbx);
+
+    logger.debug("Sandbox started with id: " + id);
+    const currentDir = await sbx.commands.run("pwd");
+    console.log("current dir: " + JSON.stringify(currentDir));
+
+    const files = await sbx.commands.run("ls -la");
+    console.log("files: " + JSON.stringify(files));
 
     logger.info("sandbox created with id: " + id);
     logger.info(`$visit ${sbx.getHost(3000)}`);
@@ -112,15 +117,21 @@ class SanBox {
   }
 
 
+  /**
+   * runs npm run dev in the sandbox and wait for it to start by checking port 3000, this is specific for the portfolio template but can be used for any next js project
+   * @param sbx 
+   */
   async NpmRunDev(sbx: Sandbox) {
-    const Startres = await sbx.commands.run("cd e2b_scripts/portfolio-starter && npm run dev", {
+    const Startres = await sbx.commands.run("npm run dev", {
       background: true,
     });
     const Checkres = await sbx.commands.run(`
       until ss -tuln | grep -q ':3000'; do sleep 0.5; done
-    `);
+    `, { timeoutMs: 120_000 });
     logger.debug({ Checkres }, "Started next dev server in sandbox");
   }
+
+
 
   async connectToSandboxWithMcp(userId: string) {
     const sbx = await this.connectToSandbox(userId)

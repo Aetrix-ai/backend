@@ -42,7 +42,8 @@ AiRouter.get("/sandbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
   logger.info("Creating sandbox")
-  const sbxId = SanBox.buildTemplateSandbox(userID, "portfolio")
+  const sbxId = await SanBox.buildTemplateSandbox(userID, "portfolio")
+  logger.info(`Sandbox created with sbx: ${sbxId}`)
   res.json({
     sandbox: sbxId,
   });
