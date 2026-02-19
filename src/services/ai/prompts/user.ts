@@ -1,7 +1,7 @@
 export function getUserPromt(task: string){
     return `
 TASK TO IMPLENT: 
-
+    
 
     ${task}
 

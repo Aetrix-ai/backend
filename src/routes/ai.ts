@@ -25,9 +25,14 @@ AiRouter.post("/chat", async (req, res) => {
 
     //@ts-ignore
     const userID = req.user.id;
-    const Box = await SanBox.connectToSandboxWithMcp(userID);
-    await ChatAI({ userPrompt: payload.data.prompt, tools: Box!.tools, res });
-    await SanBox.NpmRunDev(Box!.sbx);
+    const Box = await SanBox.connectToSandbox(userID);
+    if (!Box) {
+      logger.warn(`No sandbox found for user: ${userID}`);
+      return res.status(404).send({ error: "Sandbox not found" });
+    }
+    await ChatAI({ userPrompt: payload.data.prompt, sbx: Box, res });
+
+    await SanBox.NpmRunDev(Box);
   } catch (err) {
     logger.error(err);
     if (!res.headersSent) {

@@ -1,16 +1,24 @@
 
 import { createAgent, DynamicStructuredTool } from "langchain";
-
+import { Sandbox } from "e2b";
 import { ChatOllama } from "@langchain/ollama"
+import { ChatAnthropic } from "@langchain/anthropic"
+import { createDeepAgent } from "deepagents";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+// const llm = new ChatOllama({
+//     model: "qwen3-coder:30b",
+//     temperature: 0.8,
+//     maxRetries: 2,
 
-const llm = new ChatOllama({
-    model: "qwen3-coder:30b",
-    temperature: 0.8,
-    maxRetries: 2,
+//     // other params...
+// })
 
-    // other params...
+
+const llm = new ChatAnthropic({
+  model: "claude-haiku-4-5",
+  temperature: 0.8,
+  maxRetries: 2,
 })
-
 
 import { Response } from "express";
 import { getSystemPrompt } from "./prompts/system";
@@ -19,26 +27,31 @@ import { getUserPromt } from "./prompts/user";
 
 export async function ChatAI({
   userPrompt,
-  tools,
+  sbx,
   res,
 }: {
   userPrompt: string;
-  tools: DynamicStructuredTool[];
+  sbx: Sandbox;
   res: Response;
 }) {
 
-
-  const toolsString =""
-
-  tools.forEach((tool , i)=>{
-    toolsString + `\n\n ${i+1} -tool: ${tool.name} : ${tool.description}\n`
-  })
-
-
-  tools.forEach((tool, i) => {
-    
-  })
-  const agent = createAgent({
+  const client = new MultiServerMCPClient({
+    mcpServers: {
+      filesystem: {
+        transport: "http",
+        url: await sbx.getMcpUrl(),
+        headers: {
+          Authorization: await sbx.getMcpToken() || "",
+        },  
+      }
+    }
+  });
+  const tools = await client.getTools();
+  const toolsString = tools.map(tool => `- ${tool.name}: ${tool.description}`).join("\n")
+  for (const tool of tools) {
+    console.log(`Tool: ${tool.name}`);
+  }
+  const agent = createDeepAgent({
     model: llm,
     tools: tools,
     systemPrompt: getSystemPrompt(toolsString)

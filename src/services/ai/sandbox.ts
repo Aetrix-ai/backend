@@ -3,7 +3,7 @@
 import { Sandbox } from "e2b";
 import { redis } from "../../index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
 import logger from "../../lib/logger.js";
 import { getTools } from "./tools.js";
 
@@ -62,12 +62,12 @@ class SanBox {
       )
     }
   }
-/**
- * create an AI sandbox with a specified template, if the sandbox already exists it returns the existing one
- * @param userId 
- * @param template 
- * @returns 
- */
+  /**
+   * create an AI sandbox with a specified template, if the sandbox already exists it returns the existing one
+   * @param userId 
+   * @param template 
+   * @returns 
+   */
   private async createAISandbox(userId: string, template: string): Promise<string> {
     const sbxId = await redis.get(userId);
     if (sbxId) {
@@ -78,26 +78,26 @@ class SanBox {
     const sbx = await Sandbox.create(template, {
       mcp: {
         filesystem: {
-          paths: ["/home/user/e2b_scripts/portfolio-starter"]
+          paths: ["/home/user/e2b_scripts/portfolio-starter-vite"]
         },
       },
-      
+
       envs: {
         GIT_TOKEN: process.env.GIT_TOKEN!,
-        NEXT_PUBLIC_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
-        NEXT_PUBLIC_USER_ID: "2" //TODO: change rhus to String(userId)
+        VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
+        VITE_USER_ID: "2" //TODO: change rhus to String(userId)
       },
 
       timeoutMs: 3_600_000,
     });
-   
+
     const id = (await sbx.getInfo()).sandboxId;
     const result = await redis.set(userId, id, {
       ex: 3600, // Set TTL to 1 hour (3600 seconds)
     });
     logger.info("sandbox created with id: " + id);
 
-  
+
     // await sbx.commands.run("code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
     //   background: true,
     // });
@@ -111,7 +111,7 @@ class SanBox {
     console.log("files: " + JSON.stringify(files));
 
     logger.info("sandbox created with id: " + id);
-    logger.info(`$visit ${sbx.getHost(3000)}`);
+    logger.info(`$visit ${sbx.getHost(5173)}`);
     logger.info("started projects (dev)");
     return id;
   }
@@ -126,37 +126,11 @@ class SanBox {
       background: true,
     });
     const Checkres = await sbx.commands.run(`
-      until ss -tuln | grep -q ':3000'; do sleep 0.5; done
+      until ss -tuln | grep -q ':5173'; do sleep 0.5; done
     `, { timeoutMs: 120_000 });
     logger.debug({ Checkres }, "Started next dev server in sandbox");
   }
 
-
-
-  async connectToSandboxWithMcp(userId: string) {
-    const sbx = await this.connectToSandbox(userId)
-    const client = new Client({
-      name: "e2b-mcp-client",
-      version: "1.0.0",
-    });
-
-    if (!sbx) throw new Error("sbx connetion failure")
-
-    const transport = new StreamableHTTPClientTransport(new URL(sbx.getMcpUrl()), {
-      requestInit: {
-        headers: {
-          Authorization: `Bearer ${await sbx.getMcpToken()}`,
-        },
-      },
-    });
-    await client.connect(transport);
-    const tools = await getTools(client);
-    logger.info("avialable tools");
-    tools.map((tool: any, i: number) => {
-      logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
-    });
-    return { sbx, client, tools };
-  }
 
   async connectToSandbox(userId: string): Promise<Sandbox | undefined> {
     const sbxid = await redis.get(userId);
@@ -176,6 +150,7 @@ class SanBox {
     await redis.del(userId);
     logger.info("Sandbox killed for user: " + userId);
   }
+
 }
 
 export function sandbox() {
