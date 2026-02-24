@@ -75,8 +75,6 @@ You must:
 - Inspect console logs and network requests first
 - Analyze before modifying code
 
-## tools: ${tools}
-
 ## Output Rules
 - Be concise (≤2 lines unless detail is requested)
 - No emojis

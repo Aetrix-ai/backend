@@ -7,7 +7,7 @@ import { Client } from "@modelcontextprotocol/sdk/client";
 import logger from "../../lib/logger.js";
 import { getTools } from "./tools.js";
 
-type templates = "portfolio" | "next-playground" | "zero" | "event"
+type templates = "portfolio" | "next-playground" | "play-ground" | "event"
 
 class SanBox {
 
@@ -75,10 +75,24 @@ class SanBox {
       return sbxId as string
     }
 
-    const sbx = await Sandbox.create(template, {
+    // const sbx = await Sandbox.create(template, {
+    //   mcp: {
+    //     filesystem: {
+    //       paths: ["/home/user/e2b_scripts/aetrix-dev-portfolio"]
+    //     },
+    //   },
+
+    //   envs: {
+    //     GIT_TOKEN: process.env.GIT_TOKEN!,
+    //     VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
+    //     VITE_USER_ID: "2" //TODO: change rhus to String(userId)
+    //   },
+
+
+      const sbx = await Sandbox.create(template, {
       mcp: {
         filesystem: {
-          paths: ["/home/user/e2b_scripts/portfolio-starter-vite"]
+          paths: ["/home/user/e2b_scripts/play-ground"]
         },
       },
 
@@ -87,6 +101,7 @@ class SanBox {
         VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
         VITE_USER_ID: "2" //TODO: change rhus to String(userId)
       },
+
 
       timeoutMs: 3_600_000,
     });
@@ -157,6 +172,6 @@ export function sandbox() {
 
   const Templates: Map<templates, string> = new Map()
   Templates.set("portfolio", "aetrix-dev-portfolio")
-  Templates.set("zero", "aetrix-dev-zero")
+  Templates.set("play-ground", "aetrix-dev-playground")
   return new SanBox(Templates)
 }
