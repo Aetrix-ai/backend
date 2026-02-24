@@ -7,7 +7,7 @@ description: Use this skill for navigating and understanding codebases, especial
 
 ## Overview
 
-This skill explains how to navigate and understand codebases in order to provide accurate, up-to-date guidance. and make changes to the codebase. It is designed to help understand the structure, functionality, and key components of a codebase, enabling you to effectively work with it and make informed decisions when modifying or extending it.
+This skill explains how to navigate and understand codebases in order to provide accurate, up-to-date guidance. and make changes to the codebase. It is designed to help understand the structure, functionality, and key components of a codebase, enabling you to effectively work with it and make informed decisions when modifying or extending it. for example cases please refer to [example.md](./references/example.md)
 
 ## Instructions
 

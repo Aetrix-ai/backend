@@ -1,17 +1,11 @@
-export function getUserPromt(task: string){
-    return `
-
-PROJECT: current info:
-${portfolioStarterInfo}
-TASK TO IMPLENT: 
+export function getUserPromt(task: string) {
+  return `
 
 
     ${task}
 
 
-  Do not fecht any file already provided in the context
-
-`
+`;
 }
 
 const portfolioStarterInfo = `
@@ -388,4 +382,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 | **TypeScript** | Type safety |
 | **React Router** | Client-side routing |
 | **Tailwind CSS** | Styling |
-`
+`;
