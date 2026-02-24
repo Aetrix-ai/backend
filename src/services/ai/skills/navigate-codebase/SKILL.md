@@ -28,3 +28,9 @@ This skill explains how to navigate and understand codebases in order to provide
 
 ### 6. create a brief summary of the codebase based on your understanding. This summary should include key components, their functionality, and how they interact with each other. This will serve as a reference for you when making changes to the codebase in the future.
 
+
+### Rules you should follow when using this skill:
+- Always start by identifying the entry points of the codebase, as they provide a clear starting
+- never read or list directory node_modules or package-lock.json as they are not relevant to understanding the codebase and can be very large and overwhelming.
+- Focus on understanding the structure and functionality of the codebase, rather than getting bogged down
+- read only necessary files to understand the codebase and make changes. Avoid reading files that are not relevant to your task, as this can lead to information overload and make it harder to focus on the important aspects of the codebase.
