@@ -4,7 +4,7 @@
  * 
  */
 import { Router } from "express";
-import { prisma } from "../config";
+import { prisma } from "../config.js";
 
 
 

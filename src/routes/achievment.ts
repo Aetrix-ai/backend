@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { achievementSchema } from "../lib/schema";
-import logger from "../lib/logger";
-import { prisma } from "../config";
-import { ImageKitClient } from "../services/imagekit/client";
+import { achievementSchema } from "../lib/schema.js";
+import logger from "../lib/logger.js";
+import { prisma } from "../config.js";
+import { ImageKitClient } from "../services/imagekit/client.js";
 import { Media } from "@prisma/client";
 import { makeTypedQueryFactory } from "@prisma/client/runtime/library";
 export const achievementRouter: Router = Router();
