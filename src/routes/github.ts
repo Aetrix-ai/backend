@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { Github } from "../services/git/github.js";
-import { connectToSandbox } from "../services/ai/sandbox.js";
+import { Github } from "../services/git/github";
 import z from "zod";
+import { sandbox } from "../services/ai/sandbox";
 
 export const GitRouter = Router()
 
 const git = new Github()
-
+const sandBox = sandbox()
 const gitSchema = z.object({
     name: z.string().min(4, "minumum 4 char"),
     decription: z.string().optional(),
@@ -25,7 +25,7 @@ GitRouter.post("/", async (req, res) => {
         })
     }
     try {
-        const sbx = await connectToSandbox(userId)
+        const sbx = await sandBox.connectToSandbox(userId)
 
         if (!sbx) {
             return res.status(500).json({

@@ -3,131 +3,175 @@
 import { Sandbox } from "e2b";
 import { redis } from "../../index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
 import logger from "../../lib/logger.js";
 import { getTools } from "./tools.js";
 
-//crete a sandboxed AI service , checks if a sandbox already exists for the user in redis with a ttl of 1 hour
-// store the id in redis with a ttl of 1 hour
+type templates = "portfolio" | "next-playground" | "play-ground" | "event"
 
-export async function createAISandbox(userId: string): Promise<string> {
-  const sbxId = await redis.get(userId);
-  if (sbxId) {
-    logger.warn(`Sandbox already exists for user: ${userId} id: ${sbxId}`);
-    return sbxId as string
+class SanBox {
+
+  private Templates: Map<templates, string>
+
+  constructor(templates: Map<templates, string>) {
+    this.Templates = templates
   }
 
-  const sbx = await Sandbox.create("aetrix-dev-portfolio", {
-    mcp: {
-      filesystem: {
-        paths: ["/home/user/e2b_scripts/portfolio-starter"],
+  /**
+   * creates a sandbox with specified type and return id 
+   *  - portfolio :  portfolio started templates
+   *  - next-playground : next js starter 
+   *  - zero : git clonable enviroment
+   *  - event : event started templates
+   * @param userID 
+   * @param type 
+   * @returns 
+   */
+  async buildTemplateSandbox(userID: string, type: templates): Promise<string | Error> {
+    const template = this.Templates.get(type)
+
+    if (!template) {
+      return new Error("Invalid type")
+    }
+
+    const id = await this.createAISandbox(userID, template)
+
+    return id
+  }
+
+  /**
+   * clone a project to a 'zero' env and starts it
+
+   * 
+   * @param gitUrl 
+   * @param sbx 
+   */
+  async buildCloneSandbox(gitUrl: string, sbx: Sandbox, commands: string[]) {
+    const repoName = gitUrl.split("/").pop()?.replace(".git", "")
+
+    if (!repoName) throw new Error("invalid git url")
+    await sbx.commands.run(
+      `git clone ${gitUrl}`,
+      { timeoutMs: 120_000 }
+    )
+
+    for (const cmd of commands) {
+      await sbx.commands.run(
+        `cd ${repoName} && ${cmd}`,
+        { timeoutMs: 300_000 }
+      )
+    }
+  }
+  /**
+   * create an AI sandbox with a specified template, if the sandbox already exists it returns the existing one
+   * @param userId 
+   * @param template 
+   * @returns 
+   */
+  private async createAISandbox(userId: string, template: string): Promise<string> {
+    const sbxId = await redis.get(userId);
+    if (sbxId) {
+      logger.warn(`Sandbox already exists for user: ${userId} id: ${sbxId}`);
+      return sbxId as string
+    }
+
+    // const sbx = await Sandbox.create(template, {
+    //   mcp: {
+    //     filesystem: {
+    //       paths: ["/home/user/e2b_scripts/aetrix-dev-portfolio"]
+    //     },
+    //   },
+
+    //   envs: {
+    //     GIT_TOKEN: process.env.GIT_TOKEN!,
+    //     VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
+    //     VITE_USER_ID: "2" //TODO: change rhus to String(userId)
+    //   },
+
+
+      const sbx = await Sandbox.create(template, {
+      mcp: {
+        filesystem: {
+          paths: ["/home/user/e2b_scripts/play-ground"]
+        },
       },
-    },
 
-    envs: {
-      GIT_TOKEN: process.env.GIT_TOKEN!,
-      NEXT_PUBLIC_BACKEND_API_URL:"http://localhost:4000/public",
-      NEXT_PUBLIC_USER_ID:String(userId)
-    },
-
-    timeoutMs: 3_600_000,
-  });
-
-  const id = (await sbx.getInfo()).sandboxId;
-
-  logger.info("sandbox created with id: " + id);
-
-  const result = await redis.set(userId, id, {
-    ex: 3600, // Set TTL to 1 hour (3600 seconds)
-  });
-
-  await sbx.commands.run("cd e2b_scripts/portfolio-starter  && code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
-    background: true,
-  });
-
-  logger.info("started code server");
-  await NpmRunDev(sbx);
-
-
-  logger.info(`$visit ${sbx.getHost(3000)}`);
-  logger.info("started projects (dev)");
-  return id;
-}
-
-
-
-
-
-export async function killSandbox(userId: string) {
-  const sbxId = await redis.get(userId);
-  if (!sbxId) {
-    logger.info("No sandbox found for user: " + userId);
-    return;
-  }
-
-  const sbx = await Sandbox.connect(sbxId as string);
-  await sbx.kill();
-  await redis.del(userId);
-  logger.info("Sandbox killed for user: " + userId);
-}
-
-
-
-
-
-export async function connectToSandbox(userId: string): Promise<Sandbox | undefined> {
-  const sbxid = await redis.get(userId);
-  if (!sbxid) {
-    logger.info("sandbox not exist for user: " + userId);
-    return
-  }
-  const sbx = await Sandbox.connect(sbxid as string);
-  return sbx
-}
-
-
-
-
-
-export async function connectToSandboxWithMcp(userId: string) {
-  const sbx = await connectToSandbox(userId)
-
-  const client = new Client({
-    name: "e2b-mcp-client",
-    version: "1.0.0",
-  });
-
-  if (!sbx) throw new Error("sbx connetion failure")
-
-  const transport = new StreamableHTTPClientTransport(new URL(sbx.getMcpUrl()), {
-    requestInit: {
-      headers: {
-        Authorization: `Bearer ${await sbx.getMcpToken()}`,
+      envs: {
+        GIT_TOKEN: process.env.GIT_TOKEN!,
+        VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
+        VITE_USER_ID: "2" //TODO: change rhus to String(userId)
       },
-    },
-  });
-  await client.connect(transport);
-  const tools = await getTools(client);
-  ;
-  logger.info("avialable tools");
-  tools.map((tool: any, i: number) => {
-    logger.info(`ToolNo :${i} Name: ${tool.name} \n ${tool.description}`);
-  });
-  return { sbx, client, tools };
+
+
+      timeoutMs: 3_600_000,
+    });
+
+    const id = (await sbx.getInfo()).sandboxId;
+    const result = await redis.set(userId, id, {
+      ex: 3600, // Set TTL to 1 hour (3600 seconds)
+    });
+    logger.info("sandbox created with id: " + id);
+
+
+    // await sbx.commands.run("code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
+    //   background: true,
+    // });
+    await this.NpmRunDev(sbx);
+
+    logger.debug("Sandbox started with id: " + id);
+    const currentDir = await sbx.commands.run("pwd");
+    console.log("current dir: " + JSON.stringify(currentDir));
+
+    const files = await sbx.commands.run("ls -la");
+    console.log("files: " + JSON.stringify(files));
+
+    logger.info("sandbox created with id: " + id);
+    logger.info(`$visit ${sbx.getHost(5173)}`);
+    logger.info("started projects (dev)");
+    return id;
+  }
+
+
+  /**
+   * runs npm run dev in the sandbox and wait for it to start by checking port 3000, this is specific for the portfolio template but can be used for any next js project
+   * @param sbx 
+   */
+  async NpmRunDev(sbx: Sandbox) {
+    const Startres = await sbx.commands.run("npm run dev", {
+      background: true,
+    });
+    const Checkres = await sbx.commands.run(`
+      until ss -tuln | grep -q ':5173'; do sleep 0.5; done
+    `, { timeoutMs: 120_000 });
+    logger.debug({ Checkres }, "Started next dev server in sandbox");
+  }
+
+
+  async connectToSandbox(userId: string): Promise<Sandbox | undefined> {
+    const sbxid = await redis.get(userId);
+    if (!sbxid) {
+      logger.info("sandbox not exist for user: " + userId);
+      return
+    }
+    const sbx = await Sandbox.connect(sbxid as string);
+    return sbx
+  }
+
+
+  async killSandbox(userId: string) {
+    const sbx = await this.connectToSandbox(userId)
+    if (!sbx) return
+    await sbx.kill();
+    await redis.del(userId);
+    logger.info("Sandbox killed for user: " + userId);
+  }
+
 }
 
+export function sandbox() {
 
-
-
-
-export async function NpmRunDev(sbx: Sandbox) {
-  const Startres = await sbx.commands.run("cd e2b_scripts/portfolio-starter && npm run dev", {
-    background: true,
-  });
-  const Checkres = await sbx.commands.run(`
-      until ss -tuln | grep -q ':3000'; do sleep 0.5; done
-    `);
-  logger.debug({ Checkres }, "Started next dev server in sandbox");
+  const Templates: Map<templates, string> = new Map()
+  Templates.set("portfolio", "aetrix-dev-portfolio")
+  Templates.set("play-ground", "aetrix-dev-playground")
+  return new SanBox(Templates)
 }
-
-

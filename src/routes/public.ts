@@ -39,6 +39,7 @@ publicRouter.get("/profile/:id", async (req, res) => {
         })
     }
     catch (e) {
+        console.log(e)
         res.status(500).json({
             message: "Unable to get data from database"
         })
@@ -77,6 +78,7 @@ publicRouter.get("/project/:id", async (req, res) => {
         })
     }
     catch (e) {
+        console.log(e)
         res.status(500).json({
             message: "Unable to get data from database"
         })
@@ -114,6 +116,7 @@ publicRouter.get("/achievments/:id", async (req, res) => {
         })
     }
     catch (e) {
+        console.log(e)
         res.status(500).json({
             message: "Unable to get data from database"
         })
@@ -141,7 +144,7 @@ publicRouter.get("/skills/:id", async (req, res) => {
     try {
         const user = await prisma.skill.findMany({
             where: { userId: parsedId },
-           
+
         })
 
         res.json({
@@ -149,6 +152,7 @@ publicRouter.get("/skills/:id", async (req, res) => {
         })
     }
     catch (e) {
+        console.log(e)
         res.status(500).json({
             message: "Unable to get data from database"
         })
