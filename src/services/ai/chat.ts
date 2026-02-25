@@ -1,3 +1,8 @@
+/**
+ * @deprecated This file is deprecated and will be removed in a future version.
+ * Please use './agent.ts' instead.
+ */
+
 import { createAgent, DynamicStructuredTool } from "langchain";
 import { Sandbox } from "e2b";
 import { ChatOllama } from "@langchain/ollama";
@@ -47,15 +52,17 @@ export async function LoadSkills(): Promise<Record<string, FileData>> {
     const skillContent = await response.text();
 
     //example path name: /skills/navigate-codebase/SKILL.md
-    const skillPath = "/" + skillUrl.split("ai").pop()
+    const skillPath = skillUrl.split("ai").pop() || "unknown-skill.md";
     skillsFiles[skillPath] = createFileData(skillContent);
     console.log(skillsFiles) // Log the first 200 characters of the skill content
   }
   return skillsFiles;
 }
 
-"navigate-codebase/references/example.md"
 
+/**
+ * @deprecated Use agent.ts/Agent class instead instead.
+ */
 export async function ChatAI({
   userPrompt,
   sbx,

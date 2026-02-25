@@ -6,8 +6,11 @@ import { ChatAI } from "../services/ai/chat.js";
 import { sandbox } from "../services/ai/sandbox.js";
 export const AiRouter: Router = Router();
 
+import { Agent } from "../services/ai/agent.js";
 
-const SanBox = sandbox()
+const agent = new Agent();
+const SanBox = sandbox();
+
 AiRouter.post("/chat", async (req, res) => {
   res.status(200);
   res.setHeader("Content-Type", "text/event-stream");
@@ -30,25 +33,24 @@ AiRouter.post("/chat", async (req, res) => {
       logger.warn(`No sandbox found for user: ${userID}`);
       return res.status(404).send({ error: "Sandbox not found" });
     }
-    await ChatAI({ userPrompt: payload.data.prompt, sbx: Box, res });
-
+    await agent.Invoke(Box, payload.data.prompt, res);
     await SanBox.NpmRunDev(Box);
   } catch (err) {
     logger.error(err);
-    if (!res.headersSent) {
-      res.status(500).json({ msg: "chat error" });
-    } else {
-      res.end();
-    }
+    res.write(
+      `data: ${JSON.stringify({ error: "Failed to process AI request" })}\n\n`,
+    );
+  } finally {
+    res.end();
   }
 });
 
 AiRouter.get("/sandbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
-  logger.info("Creating sandbox")
+  logger.info("Creating sandbox");
   const sbxId = await SanBox.buildTemplateSandbox(userID, "play-ground");
-  logger.info(`Sandbox created with sbx: ${sbxId}`)
+  logger.info(`Sandbox created with sbx: ${sbxId}`);
   res.json({
     sandbox: sbxId,
   });
