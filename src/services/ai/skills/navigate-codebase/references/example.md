@@ -82,3 +82,7 @@ return <Welcome />;
 }
 ```
 
+
+# Bad response example 
+
+play-ground/ ├── app/ # Main application source code │ ├── root.tsx # Root component (main entry point) │ ├── app.css # Global styles │ ├── routes.ts # Route definitions │ ├── routes/ │ │ └── home.tsx # Home page component │ └── welcome/ # Welcome component with assets │ ├── welcome.tsx │ ├── logo-dark.svg │ └── logo-light.svg │ ├── build/ # Compiled output │ ├── client/ # Client-side build artifacts │ │ └── assets/ # Bundled JS, CSS, SVGs │ └── server/ # Server-side build artifacts │ ├── public/ # Static public assets │ ├── node_modules/ # Dependencies (not shown in detail) │ ├── .react-router/ # React Router auto-generated types │ └── types/ # TypeScript type definitions │ ├── Configuration Files │ ├── package.json # Project dependencies & scripts │ ├── tsconfig.json # TypeScript configuration │ ├── vite.config.ts # Vite bundler configuration │ ├── react-router.config.ts # React Router configuration │ ├── Dockerfile # Docker containerization │ ├── .gitignore # Git ignore rules │ └── .dockerignore # Docker ignore rules
