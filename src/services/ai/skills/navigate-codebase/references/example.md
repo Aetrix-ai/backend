@@ -1,6 +1,6 @@
 ---
 name: example-response
-description: an example/template for creating summaryresponse
+description: an example/template for creating summary response
 ---
 
 # Navigation summary
@@ -9,6 +9,10 @@ description: an example/template for creating summaryresponse
 
 describe the overview of code base incluing files(with paths) the below is example response
 
+## Rules
+- All code snipets , Structure diagrams , Entry Points should be wraped in a code \`\`\` snippets
+- add proper break
+- focus on readablity both human and ai
 #### example
 
   
@@ -20,7 +24,7 @@ the project is and react project with play-ground/app/routes/home.tsx as main fi
 
 
 ### **Project Structure:**
-    
+   
     play-ground/
     ├── .react-router/          (Generated React Router types)
     ├── app/                    (Application source code)
