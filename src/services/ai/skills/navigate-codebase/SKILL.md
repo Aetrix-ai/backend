@@ -5,11 +5,21 @@ description: Use this skill for navigating and understanding codebases, especial
 
 # navigate-code
 
+
 ## Overview
 
 This skill explains how to navigate and understand codebases in order to provide accurate, up-to-date guidance. and make changes to the codebase. It is designed to help understand the structure, functionality, and key components of a codebase, enabling you to effectively work with it and make informed decisions when modifying or extending it. for response template please refer to [template.md](./references/template.md)
 
 ## Instructions
+
+### allowed-tools:
+- filesystem-read_file
+- filesystem-list_directory
+- filesystem-read_multiple_files
+- filesystem-search_files
+- filesystem-directory_tree [**strict: dont use this tool in root directory**]
+- filesystem-write_file[**rule: use this tool only if user ask to create doc files**]
+
 
 ### 1. Identify Relevant Documentation if procided find readme files if not provided proceed to deep dive into the codebase
 
