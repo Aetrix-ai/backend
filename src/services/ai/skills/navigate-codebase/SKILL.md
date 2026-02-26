@@ -50,20 +50,7 @@ This skill explains how to navigate and understand codebases in order to provide
 - never read or list directory node_modules or package-lock.json as they are not relevant to understanding the codebase and can be very large and overwhelming.
 - Focus on understanding the structure and functionality of the codebase, rather than getting bogged down
 - read only necessary files to understand the codebase and make changes. Avoid reading files that are not relevant to your task, as this can lead to information overload and make it harder to focus on the important aspects of the codebase.
-- always follow [example.md](./references/example.md) structure for creating summary and tree diagram of the codebase. This will help you maintain consistency and ensure that your summaries are clear and easy to understand.
 
 
 
 
-<!-- 
-Tool: filesystem-create_directory
-Tool: filesystem-directory_tree
-Tool: filesystem-edit_file
-Tool: filesystem-get_file_info
-Tool: filesystem-list_allowed_directories
-Tool: filesystem-list_directory
-Tool: filesystem-move_file
-Tool: filesystem-read_file
-Tool: filesystem-read_multiple_files
-Tool: filesystem-search_files
-Tool: filesystem-write_file -->
