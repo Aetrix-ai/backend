@@ -6,7 +6,7 @@ import { getSystemPrompt } from "./prompts/system.js";
 import { MemorySaver } from "@langchain/langgraph";
 import { Response } from "express";
 import logger from "../../lib/logger.js";
-
+import { Tool } from "langchain";
 export class Agent {
   // checkpoiner to save conversation history in memory
   // TODO: later use a new postgres , for fast forward  development, use in-memory checkpointer first
@@ -91,6 +91,36 @@ export class Agent {
     return await client.getTools();
   }
 
+  private makeSafe<T extends { invoke: (...args: any[]) => Promise<any> }>(tool: T): T {
+    return {
+      ...tool,
+      async invoke(
+        input: Parameters<T["invoke"]>[0],
+        config?: Parameters<T["invoke"]>[1],
+      ) {
+        try {
+          const result = await tool.invoke(input, config);
+          return result;
+        } catch (err) {
+          let errorMsg = "Unknown MCP error";
+          if (
+            err &&
+            typeof err === "object" &&
+            "message" in err &&
+            typeof (err as any).message === "string"
+          ) {
+            errorMsg = (err as any).message;
+          }
+          return {
+            success: false,
+            error: errorMsg,
+            recoverable: true,
+          };
+        }
+      },
+    } as T;
+  }
+
   /**
    * initialize and agent with the llm, tools, system prompt and checkpointer,
    * the agent will be used to chat with the user, and use the tools provided by the sandbox to answer the user's questions
@@ -100,12 +130,13 @@ export class Agent {
   private async initializeAgent(sbx: Sandbox): Promise<DeepAgent> {
     const tools = await this.getTools(sbx);
     const toolsString = tools
-      .map((tool) => `- ${tool.name}: ${tool.description}`)
+      .map((tool) => `- ${tool.name}`)
       .join("\n");
 
+    const safeTools = tools.map((tool) => this.makeSafe(tool));
     const agent = createDeepAgent({
       model: this.llm,
-      tools: await this.getTools(sbx),
+      tools: safeTools,
       systemPrompt: getSystemPrompt(toolsString),
       checkpointer: this.checkpointer,
       skills: ["/skills/"],
@@ -177,9 +208,12 @@ export class Agent {
       console.log("type of value:", typeof value["messages"]);
       console.log(
         "keys of value:",
-        value && Object.keys(value) || "no messages key",
+        (value && Object.keys(value)) || "no messages key",
       );
-      console.log("value content:", JSON.stringify(value).slice(0, 100) + "...");
+      console.log(
+        "value content:",
+        JSON.stringify(value).slice(0, 100) + "...",
+      );
       res.write(`data: ${JSON.stringify({ [key]: value.messages })}\n\n`);
       logger.info(`Received chunk: ${key}`);
       // console.log(`Chunk content: ${JSON.stringify(value)}`); // Log the first 100 characters of the chunk content

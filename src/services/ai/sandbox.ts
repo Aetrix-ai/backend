@@ -5,7 +5,7 @@ import { redis } from "../../index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
 
 import logger from "../../lib/logger.js";
-import { getTools } from "./tools.js";
+
 
 type templates = "portfolio" | "next-playground" | "play-ground" | "event"
 
@@ -40,7 +40,7 @@ class SanBox {
   }
 
   /**
-   * clone a project to a 'zero' env and starts it
+   * clone a project s a 'zero' env and starts it
 
    * 
    * @param gitUrl 
@@ -92,7 +92,7 @@ class SanBox {
       const sbx = await Sandbox.create(template, {
       mcp: {
         filesystem: {
-          paths: ["/home/user/e2b_scripts/play-ground"]
+          paths: ["/home/user/e2b_scripts/play-ground-vite"]
         },
       },
 
