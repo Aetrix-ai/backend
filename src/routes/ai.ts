@@ -84,9 +84,10 @@ AiRouter.get("/sandbox/:template", async (req, res) => {
 
 });
 
-AiRouter.delete("/sanbox", async (req, res) => {
+AiRouter.delete("/sandbox", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
+  logger.info(`deleteing sandbox for user${userID}`);
   try {
     await SanBox.killSandbox(userID);
     res.json({
