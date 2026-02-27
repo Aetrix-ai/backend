@@ -135,12 +135,19 @@ class SanBox {
    */
   async NpmRunDev(sbx: Sandbox) {
     try {
+      const log = (data: string) => {
+        console.log(data);
+      };
       const Startres = await sbx.commands.run(
         "npm run dev -- --port 5173 --strictPort",
         {
           background: true,
+          onStderr: log,
+          onStdout: log,
         },
       );
+
+
       const Checkres = await sbx.commands.run(
         `
       until ss -tuln | grep -q ':5173'; do sleep 0.5; done
@@ -149,9 +156,8 @@ class SanBox {
       );
       logger.info("started vite dev");
     } catch (e) {
-
-      
-      logger.info("already running")
+      console.log(e);
+      logger.info("already running");
     }
   }
 

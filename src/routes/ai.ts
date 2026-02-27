@@ -77,7 +77,7 @@ AiRouter.delete("/sanbox", async (req, res) => {
   }
 });
 
-AiRouter.get("/restart", async (require, res)=>{
+AiRouter.get("/restart", async (req, res)=>{
   //@ts-ignore
   const userID = req.user.id;
 
