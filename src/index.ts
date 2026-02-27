@@ -37,7 +37,7 @@ app.get("/", (req, res) => {
             font-size: 2em;
           }
         </style>
-        <a href="https://web-snowy-one-34.vercel.app/dashboard" >Follow the link</a>
+        <a href="https://web-snowy-one-34.vercel.app/signup" >Follow the link</a>
       </head>
       <body>
         <div>API is alive</div>
