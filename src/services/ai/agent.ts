@@ -194,7 +194,9 @@ export class Agent {
     const tools = await this.getTools(sbx);
 
     const safeTools = this.wrapTools(tools);
-    const toolsString = safeTools.map((tool) => `- ${tool.name}: ${tool.description}`).join("\n") ;
+    const toolsString = safeTools
+      .map((tool) => `- ${tool.name}: ${tool.description}`)
+      .join("\n");
 
     console.log("Tools provided by the sandbox:", toolsString);
     const agent = createDeepAgent({
@@ -246,6 +248,7 @@ export class Agent {
     userPrompt: string,
     res: Response,
     modeName: string,
+    restartFunction: () => Promise<string | Error>,
   ) {
     const sandboxInfo = await sbx.getInfo();
     logger.info(
@@ -285,6 +288,14 @@ export class Agent {
       res.write(`data: ${JSON.stringify({ [key]: value.messages })}\n\n`);
       logger.info(`Received chunk: ${key}`);
       // console.log(`Chunk content: ${JSON.stringify(value)}`); // Log the first 100 characters of the chunk content
+    }
+
+    try {
+      await restartFunction();
+    } catch (e) {
+      const errorMsg = `Error occured while restarting the dev server: ${e}`;
+      logger.error(errorMsg);
+      await this.Invoke(sbx, errorMsg, res, modeName, restartFunction);
     }
   }
 

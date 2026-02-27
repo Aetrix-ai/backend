@@ -2,16 +2,17 @@
 
 import { Sandbox } from "e2b";
 import { redis } from "../../index.js";
-import { Client } from "@modelcontextprotocol/sdk/client";
 
 import logger from "../../lib/logger.js";
 
-type templates = "portfolio" | "next-playground" | "play-ground" | "event";
-
+export type templates = "portfolio" | "play-ground" | "event";
+type templatesMetadata ={
+   alias: string,
+   pathname: string
+}
 class SanBox {
-  private Templates: Map<templates, string>;
-
-  constructor(templates: Map<templates, string>) {
+  private Templates: Map<templates, templatesMetadata>;
+  constructor(templates: Map<templates,templatesMetadata>) {
     this.Templates = templates;
   }
 
@@ -36,29 +37,13 @@ class SanBox {
     }
 
     const id = await this.createAISandbox(userID, template);
-
     return id;
   }
 
-  /**
-   * clone a project s a 'zero' env and starts it
-
-   * 
-   * @param gitUrl 
-   * @param sbx 
-   */
-  async buildCloneSandbox(gitUrl: string, sbx: Sandbox, commands: string[]) {
-    const repoName = gitUrl.split("/").pop()?.replace(".git", "");
-
-    if (!repoName) throw new Error("invalid git url");
-    await sbx.commands.run(`git clone ${gitUrl}`, { timeoutMs: 120_000 });
-
-    for (const cmd of commands) {
-      await sbx.commands.run(`cd ${repoName} && ${cmd}`, {
-        timeoutMs: 300_000,
-      });
-    }
+  getAvlTemplates ():string[]{
+    return this.Templates.keys().toArray()
   }
+
   /**
    * create an AI sandbox with a specified template, if the sandbox already exists it returns the existing one
    * @param userId
@@ -67,7 +52,7 @@ class SanBox {
    */
   private async createAISandbox(
     userId: string,
-    template: string,
+    template: templatesMetadata,
   ): Promise<string> {
     const sbxId = await redis.get(userId);
     if (sbxId) {
@@ -75,23 +60,11 @@ class SanBox {
       return sbxId as string;
     }
 
-    // const sbx = await Sandbox.create(template, {
-    //   mcp: {
-    //     filesystem: {
-    //       paths: ["/home/user/e2b_scripts/aetrix-dev-portfolio"]
-    //     },
-    //   },
 
-    //   envs: {
-    //     GIT_TOKEN: process.env.GIT_TOKEN!,
-    //     VITE_BACKEND_API_URL: "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
-    //     VITE_USER_ID: "2" //TODO: change rhus to String(userId)
-    //   },
-
-    const sbx = await Sandbox.create(template, {
+    const sbx = await Sandbox.create(template.alias, {
       mcp: {
         filesystem: {
-          paths: ["/home/user/e2b_scripts/play-ground-vite"],
+          paths: [`/home/user/e2b_scripts/${template.pathname}`],
         },
       },
 
@@ -111,9 +84,6 @@ class SanBox {
     });
     logger.info("sandbox created with id: " + id);
 
-    // await sbx.commands.run("code-server --bind-addr 0.0.0.0:8080 --auth none . ", {
-    //   background: true,
-    // });
     await this.NpmRunDev(sbx);
 
     logger.debug("Sandbox started with id: " + id);
@@ -133,31 +103,48 @@ class SanBox {
    * runs npm run dev in the sandbox and wait for it to start by checking port 3000, this is specific for the portfolio template but can be used for any next js project
    * @param sbx
    */
-  async NpmRunDev(sbx: Sandbox) {
+  async NpmRunDev(sbx: Sandbox): Promise<string | Error> {
+    let Std: string = "";
+    let Stderr: string = "";
     try {
-      const log = (data: string) => {
-        console.log(data);
+      const logStd = (data: string) => {
+        Std = data;
       };
+
+      const logStderr = (data: string) => {
+        Stderr = data;
+      };
+
       const Startres = await sbx.commands.run(
         "npm run dev -- --port 5173 --strictPort",
         {
           background: true,
-          onStderr: log,
-          onStdout: log,
+          onStderr: logStderr,
+          onStdout: logStd,
         },
       );
 
-
       const Checkres = await sbx.commands.run(
-        `
-      until ss -tuln | grep -q ':5173'; do sleep 0.5; done
-    `,
+        `until ss -tuln | grep -q ':5173'; do sleep 0.5; done`,
         { timeoutMs: 120_000 },
       );
+
       logger.info("started vite dev");
     } catch (e) {
       console.log(e);
       logger.info("already running");
+    } finally {
+      if (Stderr && Stderr.includes("Port 5173 is already in use")) {
+        Stderr = "";
+        Std = "Started dev react dev server on port 5173 successfully";
+      }
+      if (Stderr) {
+        logger.error(`Error starting dev server: ${Stderr}`);
+        return new Error(`Error starting dev server: ${Stderr}`);
+      }
+
+      logger.info(`Dev server output: ${Std}`);
+      return Std;
     }
   }
 
@@ -181,8 +168,14 @@ class SanBox {
 }
 
 export function sandbox() {
-  const Templates: Map<templates, string> = new Map();
-  Templates.set("portfolio", "aetrix-dev-portfolio");
-  Templates.set("play-ground", "aetrix-dev-playground");
+  const Templates: Map<templates, templatesMetadata> = new Map();
+  Templates.set("portfolio", {
+    alias:"aetrix-dev-portfolio",
+    pathname: "portfolio-starter-vite",
+  });
+  Templates.set("play-ground", {
+    alias:"aetrix-dev-playground",
+    pathname: "play-ground-vite",
+  });
   return new SanBox(Templates);
 }

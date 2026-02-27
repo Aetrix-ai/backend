@@ -1,56 +1,121 @@
 ---
 name: navigate-codebase
-description: Use this skill for navigating and understanding codebases, especially for generating summary that can be used to make changes to the codebase
+description: Use this skill for navigating and understanding codebases, especially for generating comprehensive summaries that can be used to make informed changes to the codebase
 ---
 
-# navigate-code
-
+# navigate-codebase
 
 ## Overview
 
-This skill explains how to navigate and understand codebases in order to provide accurate, up-to-date guidance. and make changes to the codebase. It is designed to help understand the structure, functionality, and key components of a codebase, enabling you to effectively work with it and make informed decisions when modifying or extending it. for response template please refer to [template.md](./references/template.md)
-
-## Instructions
-
-### allowed-tools:
-- filesystem-read_file
-- filesystem-list_directory
-- filesystem-read_multiple_files
-- filesystem-search_files
-- filesystem-directory_tree [**strict: dont use this tool in root directory**]
-- filesystem-write_file[**rule: use this tool only if user ask to create doc files**]
+This skill provides a structured approach to navigate and understand codebases systematically. It enables you to analyze project structure, identify key components, understand data flow, and generate accurate summaries. For response template, refer to [`template.md`](./references/template.md).
 
 
-### 1. Identify Relevant Documentation if procided find readme files if not provided proceed to deep dive into the codebase
+## Workflow Instructions
 
-### 2. find out entry points this may  in following files or folders
- - app directory contains the code that runs the application. It often includes the main application logic, components, and route
- - Look for src  they are commonly used as entry points in React applications 
+### Step 1: Identify Documentation
+- Search for `README.md`, `CONTRIBUTING.md` files
+- Read documentation to understand project purpose
+- If no documentation exists, proceed to Step 2
 
-### 3. Read src/app.tsx  to understand the structure of the codebase and how different components interact with each other.
- - Look for imports, function definitions, and component structures to get a sense of how the code is organized and how different parts of the application work together.
- - Pay attention to any comments or documentation within the code, as they can provide valuable insights into the purpose and functionality of different sections of the codebase.
- - **focus on impleation of wiring components together and how data flows through the application.**
+### Step 2: Locate Entry Points
+Common locations:
+- `app/` - Main application logic, components, routes
+- `src/main.tsx` or `src/index.tsx` - React entry points
+- `src/app.tsx` - Main application component
+- `server.ts` or `index.ts` - Backend entry points
 
-### 4. list components  directory to understand what are the avialble componets
-### 5.list components/ui directory to understand what are the avialble shadcn ui
-### 6. If you encounter any unfamiliar concepts or technologies while reading the code, take the time to research and understand them. This will help you gain a deeper understanding of the codebase and enable you to provide more accurate guidance.
+### Step 3: Analyze Entry Point Structure
+Read main entry file to understand:
+- **Import Structure** - Dependencies and internal imports
+- **Component Hierarchy** - How components are nested
+- **Data Flow** - State management, props, API integration
+- **Configuration** - Environment variables, feature flags
 
+**Focus:** Component wiring and data flow patterns
 
+### Step 4: Map Component Directory
+- List `components/` directory
+- Identify custom vs. UI library components
+- Note naming conventions and organization
 
-### 7. create a tree diagram of for entry point and components that are being used in the entry point. This will help you visualize the structure of the codebase and how different components are connected.
+### Step 5: Identify UI Component Library
+- List `components/ui/` directory
+- Document available Shadcn UI or other UI components
 
+### Step 6: Research Unfamiliar Concepts
+- Search for usage patterns within codebase
+- Read related configuration files
+- Document findings for context
 
-### 8. create a brief summary of the codebase based on your understanding. This summary should include key components, their functionality, and how they interact with each other. This will serve as a reference for you when making changes to the codebase in the future.
+### Step 7: Create Visual Structure Diagram
+Example:
+```
+src/app.tsx
+├── Layout
+│   ├── Header
+│   └── Footer
+├── Router
+│   ├── HomePage
+│   └── DashboardPage
+└── Providers
+    └── ThemeProvider
+```
 
+### Step 8: Generate Comprehensive Summary
+Include:
+1. **Project Overview** - Tech stack, entry points, project type
+2. **Architecture Patterns** - Component structure, state management, routing
+3. **Key Components** - With file paths
+4. **Data Flow** - How data moves through the application
+5. **Critical Code Snippets** - Only essential patterns
+6. **Development Considerations** - Build tools, environment setup
 
+Use template from [`references/template.md`](./references/template.md)
 
-### Rules you should follow when using this skill:
-- Always start by identifying the entry points of the codebase, as they provide a clear starting
-- never read or list directory node_modules or package-lock.json as they are not relevant to understanding the codebase and can be very large and overwhelming.
-- Focus on understanding the structure and functionality of the codebase, rather than getting bogged down
-- read only necessary files to understand the codebase and make changes. Avoid reading files that are not relevant to your task, as this can lead to information overload and make it harder to focus on the important aspects of the codebase.
+---
 
+## Rules and Best Practices
 
+### ✅ DO:
+- Start by identifying entry points
+- Read only necessary files
+- Use `codebase-read_multiple_files` for batch reading
+- Document architectural patterns
+- Provide file paths for all references
 
+### ❌ DON'T:
+- Never read `node_modules/` or lock files
+- Don't use `codebase-directory_tree` in root
+- Don't read unrelated files
+- Don't include excessive code snippets
+- Don't assume file locations without verification
 
+### 🎯 Efficiency:
+- Batch operations when possible
+- Use specific search patterns
+- Start broad, drill down as needed
+
+---
+
+## Example Workflow
+
+```
+1. Search for README.md → Found and read
+2. List src/ → Identified src/app.tsx as entry
+3. Read src/app.tsx → Understood routing structure
+4. List components/ → Found 15 custom components
+5. List components/ui/ → Found 20 Shadcn UI components
+6. Read key components → Understood data flow
+7. Create component tree diagram
+8. Generate summary using template
+```
+
+---
+
+## Integration with Other Skills
+
+- **`react-coding`** - Use insights to create/edit components
+- **`ui-styling`** - Reference discovered UI components
+- **`summarize`** - Generate concise summaries
+
+After navigation, switch to these skills for implementation.
