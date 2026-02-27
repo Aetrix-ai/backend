@@ -7,14 +7,15 @@ import { MemorySaver } from "@langchain/langgraph";
 import { Response } from "express";
 import logger from "../../lib/logger.js";
 import { ChatOllama } from "@langchain/ollama";
-import { z } from "zod";
 import { Config } from "../../config.js";
 import { getUserPrompt } from "./prompts/user.js";
+import { Tool, DynamicStructuredTool } from "langchain";
+
 export class Agent {
   // checkpoiner to save conversation history in memory
   // TODO: later use a new postgres , for fast forward  development, use in-memory checkpointer first
   private checkpointer: MemorySaver;
-  private default_model: string = Config.AI.DEFAULT_MODEL
+  private default_model: string = Config.AI.DEFAULT_MODEL;
   private default_temperature = 0.3;
   private default_max_retries = 3;
   // skill files loaded from urls are strord here
@@ -30,9 +31,8 @@ export class Agent {
 
   //llm instance, currently using ChatAnthropic, can be easily switched to other llm by changing this instance
   //TODO: should have capabilit to chat with multiple llms, not just one, and should be able to switch between them based on the use case
- 
 
-  private ChatModels: string[] = Config.AI.AVIALBLE_MODELS
+  private ChatModels: string[] = Config.AI.AVIALBLE_MODELS;
 
   private getLlmInstance(modelName: string) {
     if (!this.ChatModels.includes(modelName))
@@ -129,14 +129,15 @@ export class Agent {
           const result = await tool.invoke(input, config);
           return result;
         } catch (err) {
-          let errorMsg = "Unknown MCP error";
+          let errorMsg =
+            "Unknown MCP error for code base realted operations. use codebase- prefix for tools related to code base operations";
           if (
             err &&
             typeof err === "object" &&
             "message" in err &&
             typeof (err as any).message === "string"
           ) {
-            errorMsg = (err as any).message;
+            errorMsg += " - " + (err as any).message;
           }
           return {
             success: false,
@@ -148,17 +149,54 @@ export class Agent {
     } as T;
   }
 
+  private wrapTools<
+    T extends {
+      name: string;
+      description: string;
+      invoke: (...args: any[]) => Promise<any>;
+    },
+  >(tools: T[]): T[] {
+    const allowed = new Set([
+      "filesystem-read_file",
+      "filesystem-list_allowed_directories",
+      "filesystem-create_directory",
+      "filesystem-list_directory",
+      "filesystem-read_multiple_files",
+      "filesystem-search_files",
+      "filesystem-write_file",
+      "filesystem-get_file_info",
+    ]);
+
+    return tools
+      .filter((tool) => allowed.has(tool.name))
+      .map((tool) => {
+        const newName = tool.name.replace("filesystem-", "codebase-");
+
+        tool.name = newName;
+        tool.description += ` For any codebase ${newName.replace("codebase-", "")} related operations, use ${newName}.`;
+
+        this.makeSafe(tool);
+
+        return tool;
+      });
+  }
+
   /**
    * initialize and agent with the llm, tools, system prompt and checkpointer,
    * the agent will be used to chat with the user, and use the tools provided by the sandbox to answer the user's questions
    * @param sbx \
    * @returns
    */
-  private async initializeAgent(sbx: Sandbox , modelName: string): Promise<DeepAgent> {
+  private async initializeAgent(
+    sbx: Sandbox,
+    modelName: string,
+  ): Promise<DeepAgent> {
     const tools = await this.getTools(sbx);
-    const toolsString = tools.map((tool) => `- ${tool.name}`).join("\n");
 
-    const safeTools = tools.map((tool) => this.makeSafe(tool));
+    const safeTools = this.wrapTools(tools);
+    const toolsString = safeTools.map((tool) => `- ${tool.name}: ${tool.description}`).join("\n") ;
+
+    console.log("Tools provided by the sandbox:", toolsString);
     const agent = createDeepAgent({
       model: this.getLlmInstance(modelName),
       tools: safeTools,
@@ -203,23 +241,28 @@ export class Agent {
    * @param userPrompt
    * @param res
    */
-  async Invoke(sbx: Sandbox, userPrompt: string, res: Response , modeName: string) {
+  async Invoke(
+    sbx: Sandbox,
+    userPrompt: string,
+    res: Response,
+    modeName: string,
+  ) {
     const sandboxInfo = await sbx.getInfo();
     logger.info(
       `Requesting  ai response for sandbox ${sandboxInfo.sandboxId} with prompt: ${userPrompt.slice(0, 20)}...`,
     );
-    const agent = await this.initializeAgent(sbx , modeName);
+    const agent = await this.initializeAgent(sbx, modeName);
     const config = this.getConfig(sandboxInfo.sandboxId);
+
     logger.info(
       `Agent : model - ${modeName}, thread - ${config.configurable.thread_id}`,
     );
+
+    //ensure skills are loaded
     if (!this.skillsFiles) {
       await this.loadSkills();
     }
-    logger.info(
-      `Loaded skill files: ${Object.keys(this.skillsFiles).join(", ")}`,
-    );
-    logger.info(`Starting agent stream for sandbox ${sandboxInfo.sandboxId}`);
+
     for await (const chunk of await agent.stream(
       {
         messages: [{ role: "user", content: getUserPrompt(userPrompt) }],
@@ -245,11 +288,10 @@ export class Agent {
     }
   }
 
-
-  getAvialbleModels(){
+  getAvialbleModels() {
     return {
       models: this.ChatModels,
-      default: this.default_model
-    }
+      default: this.default_model,
+    };
   }
 }

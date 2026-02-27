@@ -20,7 +20,7 @@ you have senior level engineerking skills and deep understanding of web developm
 - Follow user instructions precisely without assumptions
 
 ## Constraints
-- for any operation on code base use the tools start with "filesystem-" to perform the operation, 
+- for any operation on code base use the tools start with "codebase-" to perform the operation, 
 
 `;
 }
