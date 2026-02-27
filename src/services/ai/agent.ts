@@ -6,12 +6,17 @@ import { getSystemPrompt } from "./prompts/system.js";
 import { MemorySaver } from "@langchain/langgraph";
 import { Response } from "express";
 import logger from "../../lib/logger.js";
-import { Tool } from "langchain";
+import { ChatOllama } from "@langchain/ollama";
+import { z } from "zod";
+import { Config } from "../../config.js";
+import { getUserPrompt } from "./prompts/user.js";
 export class Agent {
   // checkpoiner to save conversation history in memory
   // TODO: later use a new postgres , for fast forward  development, use in-memory checkpointer first
   private checkpointer: MemorySaver;
-
+  private default_model: string = Config.AI.DEFAULT_MODEL
+  private default_temperature = 0.3;
+  private default_max_retries = 3;
   // skill files loaded from urls are strord here
   private skillsFiles: Record<string, FileData>;
 
@@ -19,15 +24,35 @@ export class Agent {
   private skillsUlrs: string[] = [
     "https://raw.githubusercontent.com/ashintv/aetrix-backend/master/src/services/ai/skills/navigate-codebase/SKILL.md",
     "https://raw.githubusercontent.com/ashintv/aetrix-backend/master/src/services/ai/skills/navigate-codebase/references/example.md",
+    "https://raw.githubusercontent.com/ashintv/aetrix-backend/master/src/services/ai/skills/react-coding/SKILL.md",
+    "https://raw.githubusercontent.com/ashintv/aetrix-backend/master/src/services/ai/skills/ui-styling/SKILL.md",
   ];
 
   //llm instance, currently using ChatAnthropic, can be easily switched to other llm by changing this instance
   //TODO: should have capabilit to chat with multiple llms, not just one, and should be able to switch between them based on the use case
-  private llm: ChatAnthropic = new ChatAnthropic({
-    model: "claude-haiku-4-5",
-    temperature: 0.8,
-    maxRetries: 2,
-  });
+ 
+
+  private ChatModels: string[] = Config.AI.AVIALBLE_MODELS
+
+  private getLlmInstance(modelName: string) {
+    if (!this.ChatModels.includes(modelName))
+      throw Error(`[Invalid model selction] ${this.ChatModels}`);
+
+    // if claude model retun
+    if (modelName.includes("claude")) {
+      return new ChatAnthropic({
+        model: modelName,
+        temperature: this.default_temperature,
+        maxRetries: this.default_max_retries,
+      });
+    }
+
+    return new ChatOllama({
+      model: modelName,
+      temperature: this.default_temperature,
+      maxRetries: this.default_max_retries,
+    });
+  }
 
   // constructor to initialize the checkpointer and load the skill files from urls
   constructor() {
@@ -91,7 +116,9 @@ export class Agent {
     return await client.getTools();
   }
 
-  private makeSafe<T extends { invoke: (...args: any[]) => Promise<any> }>(tool: T): T {
+  private makeSafe<T extends { invoke: (...args: any[]) => Promise<any> }>(
+    tool: T,
+  ): T {
     return {
       ...tool,
       async invoke(
@@ -127,15 +154,13 @@ export class Agent {
    * @param sbx \
    * @returns
    */
-  private async initializeAgent(sbx: Sandbox): Promise<DeepAgent> {
+  private async initializeAgent(sbx: Sandbox , modelName: string): Promise<DeepAgent> {
     const tools = await this.getTools(sbx);
-    const toolsString = tools
-      .map((tool) => `- ${tool.name}`)
-      .join("\n");
+    const toolsString = tools.map((tool) => `- ${tool.name}`).join("\n");
 
     const safeTools = tools.map((tool) => this.makeSafe(tool));
     const agent = createDeepAgent({
-      model: this.llm,
+      model: this.getLlmInstance(modelName),
       tools: safeTools,
       systemPrompt: getSystemPrompt(toolsString),
       checkpointer: this.checkpointer,
@@ -178,15 +203,15 @@ export class Agent {
    * @param userPrompt
    * @param res
    */
-  async Invoke(sbx: Sandbox, userPrompt: string, res: Response) {
+  async Invoke(sbx: Sandbox, userPrompt: string, res: Response , modeName: string) {
     const sandboxInfo = await sbx.getInfo();
     logger.info(
       `Requesting  ai response for sandbox ${sandboxInfo.sandboxId} with prompt: ${userPrompt.slice(0, 20)}...`,
     );
-    const agent = await this.initializeAgent(sbx);
+    const agent = await this.initializeAgent(sbx , modeName);
     const config = this.getConfig(sandboxInfo.sandboxId);
     logger.info(
-      `Agent : model - ${this.llm.model}, thread - ${config.configurable.thread_id}`,
+      `Agent : model - ${modeName}, thread - ${config.configurable.thread_id}`,
     );
     if (!this.skillsFiles) {
       await this.loadSkills();
@@ -197,7 +222,7 @@ export class Agent {
     logger.info(`Starting agent stream for sandbox ${sandboxInfo.sandboxId}`);
     for await (const chunk of await agent.stream(
       {
-        messages: [{ role: "user", content: userPrompt }],
+        messages: [{ role: "user", content: getUserPrompt(userPrompt) }],
         files: this.skillsFiles,
       },
       config,
@@ -217,6 +242,14 @@ export class Agent {
       res.write(`data: ${JSON.stringify({ [key]: value.messages })}\n\n`);
       logger.info(`Received chunk: ${key}`);
       // console.log(`Chunk content: ${JSON.stringify(value)}`); // Log the first 100 characters of the chunk content
+    }
+  }
+
+
+  getAvialbleModels(){
+    return {
+      models: this.ChatModels,
+      default: this.default_model
     }
   }
 }

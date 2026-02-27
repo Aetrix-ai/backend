@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Config } from "../config.js";
 
 
 export const MediaSchema = z.object({
@@ -18,6 +19,7 @@ export const achievementSchema = z.object({
 
 export const aiRouterSchema = z.object({
   prompt: z.string().min(1).max(5000),
+  modelName: z.enum(Config.AI.AVIALBLE_MODELS)
 });
 
 export const projectSchema = z.object({

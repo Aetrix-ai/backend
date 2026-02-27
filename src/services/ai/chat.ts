@@ -26,7 +26,7 @@ const llm = new ChatAnthropic({
 import { MemorySaver } from "@langchain/langgraph";
 import { Response } from "express";
 import { getSystemPrompt } from "./prompts/system.js";
-import { getUserPromt } from "./prompts/user.js";
+import { getUserPrompt } from "./prompts/user.js";
 
 const checkpointer = new MemorySaver();
 
@@ -106,7 +106,7 @@ export async function ChatAI({
 
   for await (const chunk of await agent.stream(
     {
-      messages: [{ role: "user", content: getUserPromt(userPrompt) }],
+      messages: [{ role: "user", content: getUserPrompt(userPrompt) }],
       files: await LoadSkills(),
     },
     {

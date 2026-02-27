@@ -1,15 +1,16 @@
 import { Router } from "express";
 import { aiRouterSchema } from "../lib/schema.js";
-
 import logger from "../lib/logger.js";
-import { ChatAI } from "../services/ai/chat.js";
 import { sandbox } from "../services/ai/sandbox.js";
 export const AiRouter: Router = Router();
-
 import { Agent } from "../services/ai/agent.js";
 
 const agent = new Agent();
 const SanBox = sandbox();
+
+AiRouter.get("/models", (req, res) => {
+  return res.json(agent.getAvialbleModels());
+});
 
 AiRouter.post("/chat", async (req, res) => {
   res.status(200);
@@ -22,8 +23,10 @@ AiRouter.post("/chat", async (req, res) => {
   try {
     const payload = aiRouterSchema.safeParse(req.body);
     if (!payload.success) {
-      logger.warn("Invalid input received in AI Router");
-      return res.status(400).send({ error: "Invalid input" });
+      res.write(
+        `data: ${JSON.stringify({ model_request: "Invlaid request [parse error]" })}\n\n`,
+      );
+      return
     }
 
     //@ts-ignore
@@ -31,9 +34,11 @@ AiRouter.post("/chat", async (req, res) => {
     const Box = await SanBox.connectToSandbox(userID);
     if (!Box) {
       logger.warn(`No sandbox found for user: ${userID}`);
-      return res.status(404).send({ error: "Sandbox not found" });
+      return res.write(
+        `data: ${JSON.stringify({ error: "Failed to get a  AI sandbox" })}\n\n`,
+      );
     }
-    await agent.Invoke(Box, payload.data.prompt, res);
+    await agent.Invoke(Box, payload.data.prompt, res, payload.data.modelName);
     await SanBox.NpmRunDev(Box);
   } catch (err) {
     logger.error(err);
@@ -71,3 +76,21 @@ AiRouter.delete("/sanbox", async (req, res) => {
     });
   }
 });
+
+AiRouter.get("/restart", async (require, res)=>{
+  //@ts-ignore
+  const userID = req.user.id;
+
+  const sbx =await SanBox.connectToSandbox(userID)
+
+  if (!sbx){
+    return res.status(401).json({
+      "message": "Sandbox Not found"
+    })
+  }
+  SanBox.NpmRunDev(sbx)
+
+  res.json({
+    "message": "restarted success fully"
+  })
+})
