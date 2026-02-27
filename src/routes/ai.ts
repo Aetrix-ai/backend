@@ -38,8 +38,8 @@ AiRouter.post("/chat", async (req, res) => {
         `data: ${JSON.stringify({ error: "Failed to get a  AI sandbox" })}\n\n`,
       );
     }
-    await agent.Invoke(Box, payload.data.prompt, res, payload.data.modelName);
-    await SanBox.NpmRunDev(Box);
+    await agent.Invoke(Box, payload.data.prompt, res, payload.data.modelName, () => SanBox.NpmRunDev(Box));
+
   } catch (err) {
     logger.error(err);
     res.write(
@@ -50,15 +50,38 @@ AiRouter.post("/chat", async (req, res) => {
   }
 });
 
-AiRouter.get("/sandbox", async (req, res) => {
+
+
+
+/**
+ * special root for specialized templates
+ */
+AiRouter.get("/sandbox/:template", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
-  logger.info("Creating sandbox");
-  const sbxId = await SanBox.buildTemplateSandbox(userID, "play-ground");
-  logger.info(`Sandbox created with sbx: ${sbxId}`);
-  res.json({
-    sandbox: sbxId,
-  });
+  const template = req.params.template;
+  const avialble = SanBox.getAvlTemplates()
+
+  if (!avialble.includes(template)) {
+    return res.status(404).json({
+      "message": `invalid templates ${avialble}`
+    })
+  }
+
+  try {
+    logger.info(`Creating sandbox [${template}]`);
+    const sbxId = await SanBox.buildTemplateSandbox(userID, template as any);
+    logger.info(`Sandbox created with sbx: ${sbxId}`);
+    res.json({
+      sandbox: sbxId,
+    });
+  } catch (e) {
+    res.status(404).json({
+      message: "Unable to create template",
+      err: e
+    });
+  }
+
 });
 
 AiRouter.delete("/sanbox", async (req, res) => {
@@ -77,13 +100,13 @@ AiRouter.delete("/sanbox", async (req, res) => {
   }
 });
 
-AiRouter.get("/restart", async (req, res)=>{
+AiRouter.get("/restart", async (req, res) => {
   //@ts-ignore
   const userID = req.user.id;
 
-  const sbx =await SanBox.connectToSandbox(userID)
+  const sbx = await SanBox.connectToSandbox(userID)
 
-  if (!sbx){
+  if (!sbx) {
     return res.status(401).json({
       "message": "Sandbox Not found"
     })

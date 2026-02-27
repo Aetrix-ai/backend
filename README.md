@@ -1,184 +1,385 @@
-# Backend
+# Aetrix Backend
 
-This repository contains the backend for the project. This README explains how to configure environment variables and run the project locally.
+A comprehensive backend service for the Aetrix portfolio management platform, featuring AI-powered website generation, user authentication, and media management capabilities.
 
-## Environment
+## 🚀 Overview
 
-A sample file with safe example values is provided at `.env.example`. Copy it to `.env` and update values before running the app:
+Aetrix Backend is a TypeScript-based Express.js server that provides:
+- **User Authentication & Authorization** - JWT-based auth with role management (Student/Faculty)
+- **Portfolio Management** - CRUD operations for projects, achievements, and skills
+- **AI-Powered Generation** - LangChain-based agents for intelligent website creation
+- **Media Management** - ImageKit integration for image/video uploads
+- **GitHub Integration** - Repository management and deployment
+- **Public API** - Endpoints for portfolio data access
 
+## 📋 Prerequisites
+
+- **Node.js** 18+ and npm
+- **PostgreSQL** 14+ database
+- **ImageKit** account (for media storage)
+- **OpenAI API** key (for AI features)
+- **GitHub** account (optional, for repository integration)
+
+## 🛠️ Installation
+
+1. **Clone the repository**
 ```bash
-cp .env.example .env
-# then edit .env with your editor
+git clone https://github.com/Aetrix-ai/backend.git
+cd backend
 ```
 
-Important environment variables (also listed in `.env.example`):
-
-- NODE_ENV — environment (development | production)
-- PORT — port the server listens on
-- DATABASE_URL — PostgreSQL connection string used by Prisma
-- USER_JWT_SECRET — secret used to sign user JWTs (use a strong random string)
-- ADMIN_JWT_SECRET — secret used to sign admin JWTs (use a strong random string)
-- OPENAI_API_KEY — API key for the AI provider (keep secret)
-- AI_PROVIDER — provider name (default: `openai`)
-- AI_TEMPERATURE — model sampling temperature (0.0 - 1.0)
-- AI_MAX_TOKENS — max tokens to request from AI provider
-- BCRYPT_SALT_ROUNDS — bcrypt rounds for hashing (integer)
-- INIT_ADMIN — set to `true` to initialize a superadmin (requires SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD)
-- SUPERADMIN_EMAIL — email for initial admin
-- SUPERADMIN_PASSWORD — password for initial admin
-- LOG_LEVEL — pino logging level (trace | debug | info | warn | error | fatal)
-
-Notes and best practices
-
-- Never commit real secrets or API keys to source control. Use secret managers or environment-specific stores for production.
-- In production set `NODE_ENV=production` and ensure `DATABASE_URL`, `USER_JWT_SECRET`, `ADMIN_JWT_SECRET`, and `OPENAI_API_KEY` are set to secure values.
-- Only enable `INIT_ADMIN=true` when you intend to create an initial superadmin; make sure `SUPERADMIN_PASSWORD` is strong and then disable the initialization.
-
-## Install and run
-
-This project uses TypeScript compiled to `dist` and Node to run the compiled output.
-
-1. Install dependencies:
-
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-2. Build & run in development (this project exposes a `dev` script in `package.json`):
-
-```bash
-npm run dev
-```
-
-The `dev` script runs `tsc -b && node dist/index.js` — it compiles TypeScript and then runs the compiled Node app.
-
-# Backend
-
-This repository contains the backend for the project. This README explains how to configure environment variables and run the project locally.
-
-## Environment
-
-A sample file with safe example values is provided at `.env.example`. Copy it to `.env` and update values before running the app:
-
+3. **Set up environment variables**
 ```bash
 cp .env.example .env
-# then edit .env with your editor
+# Edit .env with your configuration
 ```
 
-Important environment variables (also listed in `.env.example`):
+4. **Set up the database**
 
-- NODE_ENV — environment (development | production)
-- PORT — port the server listens on
-- DATABASE_URL — PostgreSQL connection string used by Prisma
-- USER_JWT_SECRET — secret used to sign user JWTs (use a strong random string)
-- ADMIN_JWT_SECRET — secret used to sign admin JWTs (use a strong random string)
-- OPENAI_API_KEY — API key for the AI provider (keep secret)
-- AI_PROVIDER — provider name (default: `openai`)
-- AI_TEMPERATURE — model sampling temperature (0.0 - 1.0)
-- AI_MAX_TOKENS — max tokens to request from AI provider
-- BCRYPT_SALT_ROUNDS — bcrypt rounds for hashing (integer)
-- INIT_ADMIN — set to `true` to initialize a superadmin (requires SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD)
-- SUPERADMIN_EMAIL — email for initial admin
-- SUPERADMIN_PASSWORD — password for initial admin
-- LOG_LEVEL — pino logging level (trace | debug | info | warn | error | fatal)
-
-Notes and best practices
-
-- Never commit real secrets or API keys to source control. Use secret managers or environment-specific stores for production.
-- In production set `NODE_ENV=production` and ensure `DATABASE_URL`, `USER_JWT_SECRET`, `ADMIN_JWT_SECRET`, and `OPENAI_API_KEY` are set to secure values.
-- Only enable `INIT_ADMIN=true` when you intend to create an initial superadmin; make sure `SUPERADMIN_PASSWORD` is strong and then disable the initialization.
-
-## Install and run
-
-This project uses TypeScript compiled to `dist` and Node to run the compiled output.
-
-1. Install dependencies:
-
+Using Docker Compose (recommended):
 ```bash
-npm install
+docker-compose up -d
 ```
 
-2. Build & run in development (this project exposes a `dev` script in `package.json`):
+Or use your own PostgreSQL instance and update `DATABASE_URL` in `.env`.
 
-```bash
-npm run dev
-```
-
-The `dev` script runs `tsc -b && node dist/index.js` — it compiles TypeScript and then runs the compiled Node app.
-
-## File structure
-
-The current project layout (reflects the workspace at the time of writing):
-
-```
-docker-compose.yml
-package.json
-tsconfig.json
-prisma/
-	schema.prisma
-	migrations/
-		migration_lock.toml
-		20251014161315_init/
-			migration.sql
-		20251025111719_achievemets_projects/
-			migration.sql
-		20251025191138_project_schema_changed/
-			migration.sql
-		20251108091659_admin/
-			migration.sql
-src/
-	config.ts
-	index.ts
-	lib/
-		logger.ts
-		schema.ts
-	middlewares/
-		auth.ts
-	routes/
-		admin.ts
-		ai.ts
-		event.ts
-		user.ts
-	services/
-		ai/
-			pipeline.ts
-			agents/
-				enrichment-agent.ts
-				generator-agent.ts
-				propmts.ts
-				techstack-agent.ts
-				todo-agent.ts
-				validator-agent.ts
-		auth/
-			todo.md
-```
-
-> Note: this structure reflects the current repository snapshot and may change as features are added.
-
-## Database / Prisma
-
-The project uses Prisma. If you change the Prisma schema, run migrations with the Prisma CLI. Example (make sure `DATABASE_URL` is set correctly in your environment):
-
+5. **Run Prisma migrations**
 ```bash
 npx prisma migrate dev
-# or to apply migrations in other environments
-npx prisma migrate deploy
 ```
 
-If you need to inspect the database locally, you can run:
+6. **Generate Prisma Client**
+```bash
+npx prisma generate
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure the following:
+
+#### **Application Settings**
+- `NODE_ENV` - Environment mode (`development` | `production`)
+- `PORT` - Server port (default: `3000`)
+
+#### **Database**
+- `DATABASE_URL` - PostgreSQL connection string
+  ```
+  postgresql://user:password@host:port/database?schema=public
+  ```
+
+#### **Authentication**
+- `USER_JWT_SECRET` - Secret for user JWT tokens (use strong random string)
+- `ADMIN_JWT_SECRET` - Secret for admin JWT tokens (use strong random string)
+- `BCRYPT_SALT_ROUNDS` - Password hashing rounds (default: `10`)
+
+#### **AI Provider**
+- `OPENAI_API_KEY` - OpenAI API key for AI features
+- `AI_PROVIDER` - AI provider name (default: `openai`)
+- `AI_TEMPERATURE` - Model temperature 0.0-1.0 (default: `0.7`)
+- `AI_MAX_TOKENS` - Maximum tokens per request (default: `1500`)
+
+#### **ImageKit (Media Storage)**
+- `IMAGEKIT_PUBLIC_KEY` - ImageKit public key
+- `IMAGEKIT_PRIVATE_KEY` - ImageKit private key
+- `IMAGEKIT_URL_ENDPOINT` - ImageKit URL endpoint
+
+#### **GitHub Integration (Optional)**
+- `GITHUB_TOKEN` - GitHub personal access token
+- `GITHUB_OWNER` - Default repository owner
+
+#### **Redis (Optional)**
+- `UPSTASH_REDIS_REST_URL` - Upstash Redis URL
+- `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis token
+
+#### **Admin Initialization**
+- `INIT_ADMIN` - Set to `true` to create initial admin on startup
+- `SUPERADMIN_EMAIL` - Initial admin email
+- `SUPERADMIN_PASSWORD` - Initial admin password (use strong password)
+
+#### **Logging**
+- `LOG_LEVEL` - Pino log level (`trace` | `debug` | `info` | `warn` | `error` | `fatal`)
+
+### Docker Compose Database
+
+The included `docker-compose.yml` provides a PostgreSQL instance:
+
+```yaml
+# Default credentials
+POSTGRES_USER: aetrix
+POSTGRES_PASSWORD: aetrix_password
+POSTGRES_DB: aetrix_db_dev
+Port: 5432
+```
+
+Connection string: `postgresql://aetrix:aetrix_password@localhost:5432/aetrix_db_dev?schema=public`
+
+## 🚦 Running the Application
+
+### Development Mode
+```bash
+npm run dev
+```
+Compiles TypeScript and runs the server with hot reload.
+
+### Production Build
+```bash
+npm run build
+npm start
+```
+
+### Database Management
+```bash
+# Run migrations
+npx prisma migrate dev
+
+# Apply migrations (production)
+npx prisma migrate deploy
+
+# Open Prisma Studio (database GUI)
+npx prisma studio
+
+# Reset database (⚠️ deletes all data)
+npx prisma migrate reset
+```
+
+## 📁 Project Structure
+
+```
+aetrix-backend/
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Migration history
+├── src/
+│   ├── config.ts              # Configuration loader
+│   ├── server.ts              # Express server setup
+│   ├── index.ts               # Application entry point
+│   ├── lib/
+│   │   ├── logger.ts          # Pino logger configuration
+│   │   └── schema.ts          # Zod validation schemas
+│   ├── middlewares/
+│   │   └── auth.ts            # JWT authentication middleware
+│   ├── routes/
+│   │   ├── auth.ts            # Authentication endpoints
+│   │   ├── user.ts            # User management
+│   │   ├── project.ts         # Project CRUD
+│   │   ├── achievment.ts      # Achievement CRUD
+│   │   ├── media.ts           # Media upload/management
+│   │   ├── ai.ts              # AI generation endpoints
+│   │   ├── github.ts          # GitHub integration
+│   │   ├── vercel.ts          # Vercel deployment
+│   │   └── public.ts          # Public portfolio API
+│   └── services/
+│       ├── ai/
+│       │   ├── agent.ts       # Main AI agent
+│       │   ├── deep-agent.ts  # DeepAgents integration
+│       │   ├── chat.ts        # Chat streaming
+│       │   ├── tools.ts       # LangChain tools
+│       │   ├── sandbox.ts     # E2B code execution
+│       │   └── skills/        # AI agent skills
+│       ├── imagekit/
+│       │   └── client.ts      # ImageKit SDK wrapper
+│       ├── git/
+│       │   └── github.ts      # GitHub API client
+│       └── redis/
+│           └── redis.ts       # Redis client (rate limiting)
+├── .env.example               # Environment template
+├── docker-compose.yml         # PostgreSQL container
+├── package.json               # Dependencies
+└── tsconfig.json              # TypeScript config
+```
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /auth/signup` - User registration
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user
+
+### User Management
+- `GET /user/profile` - Get user profile
+- `PUT /user/profile` - Update user profile
+- `POST /user/skills` - Add skills
+- `DELETE /user/skills/:id` - Remove skill
+
+### Projects
+- `GET /project` - List user projects
+- `POST /project` - Create project
+- `PUT /project/:id` - Update project
+- `DELETE /project/:id` - Delete project
+
+### Achievements
+- `GET /achievment` - List achievements
+- `POST /achievment` - Create achievement
+- `PUT /achievment/:id` - Update achievement
+- `DELETE /achievment/:id` - Delete achievement
+
+### Media
+- `POST /media/authenticate-upload` - Get ImageKit auth params
+- `POST /media/upload` - Upload media file
+
+### AI Generation
+- `POST /ai/generate` - Generate website with streaming
+- `POST /ai/chat` - Chat with AI agent
+
+### Public API (No Auth Required)
+- `GET /public/profile/:id` - Get user profile
+- `GET /public/project/:id` - Get user projects
+- `GET /public/achievments/:id` - Get user achievements
+- `GET /public/skills/:id` - Get user skills
+
+### GitHub Integration
+- `POST /github/create-repo` - Create GitHub repository
+- `POST /github/push-code` - Push code to repository
+
+## 🤖 AI Features
+
+The backend includes sophisticated AI capabilities powered by LangChain:
+
+### AI Agent Skills
+Located in `src/services/ai/skills/`:
+- **React Coding** - Generate React components and applications
+- **UI Styling** - Apply Tailwind CSS styling
+- **Navigate Codebase** - Understand and modify existing code
+- **Summarize** - Extract key information from content
+
+### Tools Available to AI
+- File system operations (read, write, list)
+- Code execution in sandboxed environment (E2B)
+- GitHub repository management
+- Template rendering
+- Dependency management
+
+### Streaming Responses
+AI generation endpoints support Server-Sent Events (SSE) for real-time streaming of generated content.
+
+## 🔒 Security Best Practices
+
+1. **Never commit `.env` file** - Keep secrets out of version control
+2. **Use strong JWT secrets** - Generate cryptographically secure random strings
+3. **Enable HTTPS in production** - Use reverse proxy (nginx, Caddy)
+4. **Rotate secrets regularly** - Update API keys and JWT secrets periodically
+5. **Validate all inputs** - Zod schemas enforce type safety
+6. **Rate limiting** - Implement rate limiting for public endpoints
+7. **CORS configuration** - Restrict origins in production
+
+## 🧪 Testing
 
 ```bash
-npx prisma studio
+# Run tests (when implemented)
+npm test
+
+# Type checking
+npx tsc --noEmit
+
+# Lint code
+npm run lint
 ```
 
-## Troubleshooting
+## 📊 Database Schema
 
-- If the app errors on startup about missing environment variables, double-check your `.env` and that `NODE_ENV` is set appropriately. For `production`, the code validates that several secrets and the database URL are present and will throw errors otherwise.
+Key models in Prisma schema:
 
-## Contributing
+- **User** - User accounts with authentication
+- **Project** - Portfolio projects with media
+- **Achievement** - User achievements with media
+- **Skill** - User skills with proficiency levels
+- **Media** - Uploaded images/videos (ImageKit references)
+- **Admin** - Admin users with elevated permissions
 
-Please follow the repository conventions and open issues or PRs on GitHub.
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+```bash
+# Check PostgreSQL is running
+docker-compose ps
+
+# View logs
+docker-compose logs database
+
+# Restart database
+docker-compose restart database
+```
+
+### Migration Errors
+```bash
+# Reset database (⚠️ deletes data)
+npx prisma migrate reset
+
+# Generate client after schema changes
+npx prisma generate
+```
+
+### Port Already in Use
+```bash
+# Change PORT in .env or kill process
+lsof -ti:3000 | xargs kill -9
+```
+
+### TypeScript Compilation Errors
+```bash
+# Clean build
+rm -rf dist/
+npm run build
+```
+
+## 📝 Development Workflow
+
+1. Create feature branch from `main`
+2. Make changes and test locally
+3. Run type checking: `npx tsc --noEmit`
+4. Commit with descriptive messages
+5. Push and create pull request
+6. Wait for CI/CD checks
+7. Merge after review
+
+## 🚀 Deployment
+
+### Environment Setup
+1. Set `NODE_ENV=production`
+2. Use production database URL
+3. Set strong JWT secrets
+4. Configure CORS for your frontend domain
+5. Enable HTTPS
+6. Set up monitoring and logging
+
+### Recommended Platforms
+- **Railway** - Easy deployment with PostgreSQL
+- **Render** - Free tier available
+- **Vercel** - Serverless functions
+- **AWS/GCP/Azure** - Full control
+
+## 📚 Additional Resources
+
+- [Express.js Documentation](https://expressjs.com/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [LangChain Documentation](https://js.langchain.com/)
+- [ImageKit Documentation](https://docs.imagekit.io/)
+- [OpenAI API Reference](https://platform.openai.com/docs)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📄 License
+
+ISC License - See LICENSE file for details
+
+## 👥 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Aetrix-ai/backend/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Aetrix-ai/backend/discussions)
 
 ---
 
-If you'd like, I can also add a small npm script to copy `.env.example` to `.env` (e.g., `setup:env`) or generate strong example secrets for the `.env.example`. Let me know which you'd prefer.
+Built with ❤️ by the Aetrix Team
