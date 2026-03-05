@@ -20,33 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>ImageKit Auth Service</title>
-        <style>
-          body {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            color: white;
-            font-size: 2em;
-          }
-        </style>
-         first time using:  <a href="https://web-snowy-one-34.vercel.app/signup" >Follow the link</a>
-          Sign in : <a href="https://web-snowy-one-34.vercel.app/signup" >Follow the link</a>
-          Dashboard [already signed in (same browser)]<a href="https://web-snowy-one-34.vercel.app/dashboard" >Follow the link</a>
-        
-      </head>
-      <body>
-        <div>API is alive</div>
-      </body>
-    </html>
-  `);
+   res.redirect("https://web-snowy-one-34.vercel.app");
 });
 
 app.get("/verify/secret/:type", async (req, res) => {
