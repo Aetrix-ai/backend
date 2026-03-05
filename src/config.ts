@@ -95,7 +95,7 @@ function LoadConfig(): ConfigI {
         "qwen3-coder-next",
         "gpt-oss:20b",
       ], 
-      DEFAULT_MODEL : process.env.DEFAULT_MODEL || "gpt-oss:20b"
+      DEFAULT_MODEL : process.env.DEFAULT_MODEL || "claude-haiku-4-5",
     },
 
     BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "5"),
