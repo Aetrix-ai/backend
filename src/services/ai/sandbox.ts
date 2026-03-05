@@ -67,17 +67,17 @@ class SanBox {
           paths: [`/home/user/e2b_scripts/${template.pathname}`],
         },
       },
-
       envs: {
         GIT_TOKEN: process.env.GIT_TOKEN!,
         VITE_BACKEND_API_URL:
           "https://aetrix-backend-git-master-ashintvs-projects.vercel.app/public",
-        VITE_USER_ID: "2", //TODO: change rhus to String(userId)
+        VITE_USER_ID: `${userId}`, //TODO: change rhus to String(userId)
       },
 
       timeoutMs: 3_600_000,
     });
 
+    
     const id = (await sbx.getInfo()).sandboxId;
     const result = await redis.set(userId, id, {
       ex: 3600, // Set TTL to 1 hour (3600 seconds)

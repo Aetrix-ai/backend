@@ -70,6 +70,7 @@ AiRouter.get("/sandbox/:template", async (req, res) => {
 
   try {
     logger.info(`Creating sandbox [${template}]`);
+    logger.info(`User id sandbox: ${userID}`);
     const sbxId = await SanBox.buildTemplateSandbox(userID, template as any);
     logger.info(`Sandbox created with sbx: ${sbxId}`);
     res.json({
