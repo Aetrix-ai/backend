@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:latest
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: aetrix
       POSTGRES_PASSWORD: aetrix_password
@@ -8,11 +8,22 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/
-
+      - db_data:/var/lib/postgresql/data
 
 volumes:
   db_data:
-networks:
-  code-server:
-#connetction string postgres://aetrix:aetrix_password@database:5432/aetrix_db
+
+# ── Connection string (for reference) ──────────────────────────────────────
+# postgresql://aetrix:aetrix_password@database:5432/aetrix_db_dev
+#
+# ── Useful commands ─────────────────────────────────────────────────────────
+# Start all services:          docker compose up -d
+# Start only database:         docker compose up -d database
+# Rebuild backend image:       docker compose build backend
+# View backend logs:           docker compose logs -f backend
+# Run migrations manually:     docker compose exec backend npx prisma migrate deploy
+# Open Prisma Studio:          docker compose exec backend npx prisma studio
+# Stop all services:           docker compose down
+# Stop & remove volumes:       docker compose down -v
+
+# Made with Bob

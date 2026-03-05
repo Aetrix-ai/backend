@@ -137,8 +137,11 @@ projectRouter.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    console.log("Current media: ", currrnt.media);
+    console.log("Updated media: ", payload.data.media);
     const {media} = await ImageKitClient.CompareAndDeleteMany(currrnt.media, payload.data.media || []);
 
+    console.log("filtered media: ", media);
     const result = await prisma.project.update({
       where: { id: projectID, userId: userID },
       data: {
@@ -148,7 +151,7 @@ projectRouter.put("/:id", async (req, res) => {
         repoLink: payload.data.repoLink,
         techStack: payload.data.techStack,
         additionalInfo: payload.data.additionalInfo,
-        media: media,
+        ...(media && { media }),
       },
     });
     logger.info(`Updated project id: ${projectID} for user id: ${userID}`);

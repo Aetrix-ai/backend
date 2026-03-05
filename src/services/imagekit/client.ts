@@ -35,20 +35,22 @@ class ImageKitManager extends ImageKit {
     try {
       const mediaToDelete = existingMedia.filter((media) => !updatedMedia.some((m) => m.fileId === media.fileId));
 
-      if (mediaToDelete.length === 0) return result;
+      if (mediaToDelete.length > 0) {
+        await this.deleteMany(mediaToDelete);
 
-      await this.deleteMany(mediaToDelete);
-
-      result.media = {
-        deleteMany: mediaToDelete.map((m) => ({ id: m.id })),
-      };
+        result.media = {
+          deleteMany: mediaToDelete.map((m) => ({ id: m.id })),
+        };
+      }
 
       const mediaToAdd = updatedMedia.filter(
         (media) => !existingMedia.some((m) => media.fileId === m.fileId)
       ) as MediaI[];
-      if (mediaToAdd.length === 0) return result;
-
-      result.media.create = mediaToAdd;
+      
+      if (mediaToAdd.length > 0) {
+        if (!result.media) result.media = {};
+        result.media.create = mediaToAdd;
+      }
     } catch (error) {
       console.error("Error in CompareAndDeleteMany:", error);
     }
